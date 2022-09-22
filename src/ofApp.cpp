@@ -39,7 +39,7 @@ void ofApp::draw(){
 	int count = 0;
 	for (BasicParticle& p : particleSystem)
 	{
-		//ofEnableBlendMode(OF_BLENDMODE_ALPHA);
+		ofEnableBlendMode(OF_BLENDMODE_ADD);
 		//shader.setUniform("particlePosition", p.getPosition());
 		//shader.setUniform("particleSize", /*???*/);
 		//shader.setUniformTexture("particlePosition", img, 1);

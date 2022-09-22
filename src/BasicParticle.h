@@ -1,4 +1,5 @@
 #pragma once
+#include "ofMain.h"
 #include "Particle.h"
 
 class BasicParticle : public Particle
@@ -10,10 +11,20 @@ public:
 
     void setLife(float life);
 
+    glm::vec3 getPosition() const;
+
+    void setPosition(glm::vec3 position);
+
+    float getBrightness() const;
+
+    void setBrightness(float brightness);
+
     // Updates the particle for a specified time increment (dt).
     void update(float dt) override;
 
 private:
-    float life;
+    float life{ 1.0f };
+    glm::vec3 position;
+    float brightness{ 10.0f };
 
 };

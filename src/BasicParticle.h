@@ -9,42 +9,57 @@ public:
     // When a particle's life is reduced to zero, it will be removed from the particle system.
     float getLife() const override;
 
+    // Sets the particle's life
     void setLife(float life);
 
+    // Gets the particle's position
     glm::vec3 getPosition() const;
 
+    // Sets the particle's position
     void setPosition(glm::vec3 position);
 
+    // Gets the particle's brightness
     float getBrightness() const;
 
+    // Sets the particle's brightness
     void setBrightness(float brightness);
 
+    // Gets the particle's scale
     glm::vec3 getScale() const;
 
+    // Sets the particle's scale
     void setScale(glm::vec3 scale);
 
+    // Gets the particle's color
     glm::vec4 getColor() const;
 
+    // Sets the particle's color
     void setColor(glm::vec4 color);
 
+    // Gets the particle's type
     string getType() const;
 
+    // Sets the particle's type
     void setType(string type);
+
+    // Gets the particle's texture number
+    int getTextureNum() const;
+
+    // Sets the particle's texture number
+    void setTextureNum(int textureNum);
 
     // Updates the particle for a specified time increment (dt).
     void update(float dt) override;
 
-    int getTextureNum() const;
 
-    void setTextureNum(int textureNum);
 
 private:
-    float life{ 1.0f };// { 10.0f };
-    glm::vec3 position {10.0, 0.0, 0.0};
-    float brightness;// { 10.0f };
-    glm::vec3 scale;// {0.5, 0.5, 0.0};
-    glm::vec4 color;// { 0, 0, 1, 0 };
-    string type{};
-    int textureNum{1};
+    float life;             // Particle's life
+    glm::vec3 position;     // Particle's position
+    float brightness;       // Particle's brightness
+    glm::vec3 scale;        // Particle's scale
+    glm::vec4 color;        // Particle's color
+    string type{};          // Particle's type, either "cloud" or "lightning"
+    int textureNum{1};      // Particle's texture number, determines what texture to use, also based on type
 
 };

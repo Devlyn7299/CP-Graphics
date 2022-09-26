@@ -24,17 +24,14 @@ class ofApp : public ofBaseApp{
 		void gotMessage(ofMessage msg);
 
 	private:
-		BasicParticleGenerator particleGenerator{/* any parameters go here */};
+		BasicParticleGenerator particleGenerator{};
 		ParticleSystem<BasicParticle> lightningParticleSystem{ particleGenerator, 5, 0.4f };
-		ParticleSystem<BasicParticle> cloudParticleSystem{ particleGenerator, 10, 0.5f };
+		ParticleSystem<BasicParticle> cloudParticleSystem{ particleGenerator, 4, 0.4f };
 		ofMesh mesh;
 		ofShader shader;
 		ofImage lightningImg;
 		ofImage smokeImg;
 
-
-		//float brightness{ 10.0f };
-		//void updateBrightness( float dt, float life );
 		bool needsReload{ true };
 		void reloadShaders();
 		

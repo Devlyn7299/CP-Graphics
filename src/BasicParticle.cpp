@@ -60,15 +60,22 @@ void BasicParticle::setType(string type)
     this->type = type;
 }
 
+int BasicParticle::getTextureNum() const
+{
+    return textureNum;
+}
 
+void BasicParticle::setTextureNum(int textureNum)
+{
+    this->textureNum = textureNum;
+}
 
 void BasicParticle::update(float dt)
 {
-    //cout << " life " << life << endl;
     // Life decreases by 1 every second
     life -= dt;
 
-    // update position, velocity, and/or others
+    // Updating brightness for lightning
     if (type == "lightning")
     {
         if (life > 2.5f)
@@ -85,19 +92,11 @@ void BasicParticle::update(float dt)
         }
     }
 
-    if (type == "cloud")
+    // Updating position for clouds
+    else if (type == "cloud")
     {
-        position += glm::vec3(0.25f * dt, 0.0, 0.0);
+        position += glm::vec3(0.15f * dt, 0.0, 0.0);
     }
 }
 
-int BasicParticle::getTextureNum() const
-{
-    return textureNum;
-}
 
-void BasicParticle::setTextureNum(int textureNum)
-{
-    this->textureNum = textureNum;
-    //cout << textureNum << endl;
-}

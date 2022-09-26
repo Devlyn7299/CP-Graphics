@@ -25,17 +25,17 @@ class ofApp : public ofBaseApp{
 
 	private:
 		BasicParticleGenerator particleGenerator{/* any parameters go here */};
-		ParticleSystem<BasicParticle> particleSystem{ particleGenerator, 42, 20.0f };
-		ofMesh lightning;
-		ofMesh smoke;
+		ParticleSystem<BasicParticle> lightningParticleSystem{ particleGenerator, 5, 0.4f };
+		ParticleSystem<BasicParticle> cloudParticleSystem{ particleGenerator, 10, 0.5f };
+		ofMesh mesh;
 		ofShader shader;
 		ofImage lightningImg;
 		ofImage smokeImg;
 
-		float brightness{ 100.0f };
-		void updateBrightness( float dt, float life );
+
+		//float brightness{ 10.0f };
+		//void updateBrightness( float dt, float life );
 		bool needsReload{ true };
 		void reloadShaders();
-		float dt {0.0f};
 		
 };

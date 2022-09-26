@@ -27,7 +27,7 @@ public:
     void update (float dt)
     {
         particleRateAccum += particleRate * dt;
-
+        //cout << "particleRate " << particleRate << " particleRateAccum " << particleRateAccum << endl;
         while (particleRateAccum >= 1.0)
         {
             // Add new particles

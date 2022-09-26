@@ -4,7 +4,7 @@ layout (location = 0) in vec3 pos;
 layout (location = 3) in vec2 uv;
 
 uniform vec3 translation;
-vec3 scale = vec3(0.5, 0.5, 0.0);
+uniform vec3 scale;
 out vec2 fragUV;
 
 void main() {

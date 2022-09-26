@@ -19,12 +19,32 @@ public:
 
     void setBrightness(float brightness);
 
+    glm::vec3 getScale() const;
+
+    void setScale(glm::vec3 scale);
+
+    glm::vec4 getColor() const;
+
+    void setColor(glm::vec4 color);
+
+    string getType() const;
+
+    void setType(string type);
+
     // Updates the particle for a specified time increment (dt).
     void update(float dt) override;
 
+    int getTextureNum() const;
+
+    void setTextureNum(int textureNum);
+
 private:
-    float life{ 1.0f };
-    glm::vec3 position;
-    float brightness{ 10.0f };
+    float life{ 1.0f };// { 10.0f };
+    glm::vec3 position {10.0, 0.0, 0.0};
+    float brightness;// { 10.0f };
+    glm::vec3 scale;// {0.5, 0.5, 0.0};
+    glm::vec4 color;// { 0, 0, 1, 0 };
+    string type{};
+    int textureNum{1};
 
 };

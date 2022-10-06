@@ -2,6 +2,14 @@
 
 #include "ofMain.h"
 
+struct CameraData
+{
+	glm::vec3 pos{ 0, 0, 1 };
+	float fov;
+	glm::vec3 velocity{};
+
+};
+
 class ofApp : public ofBaseApp {
 
 public:
@@ -28,8 +36,21 @@ private:
 	ofImage img{};
 	ofMesh object;
 	ofMesh object2;
+	ofVbo objectVbo;
 
 	bool needsReload{ true };
 	void reloadShaders();
+	CameraData cam;
+
+	int prevX{ 0 }, prevY{ 0 };
+
+	float mouseSensitivity{ 0.01f };
+
+	float cameraHead{ 0 };
+	float cameraPitch{ 0 };
+
+	void updateCameraRotation(float dx, float dy);
+
+	bool allowMouseMovement{ true };
 
 };

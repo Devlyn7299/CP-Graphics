@@ -36,7 +36,8 @@ private:
 	ofImage img{};
 	ofMesh object;
 	ofMesh object2;
-	ofVbo objectVbo;
+	ofVbo objectVbo1;
+	ofVbo objectVbo2;
 
 	bool needsReload{ true };
 	void reloadShaders();

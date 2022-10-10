@@ -21,7 +21,8 @@ void ofApp::setup() {
 		object2.setNormal(i, -object2.getNormal(i));
 	}
 
-	objectVbo.setMesh(object, GL_STATIC_DRAW);
+	objectVbo1.setMesh(object, GL_STATIC_DRAW);
+	objectVbo2.setMesh(object2, GL_STATIC_DRAW);
 }
 
 //--------------------------------------------------------------
@@ -31,9 +32,10 @@ void ofApp::update() {
 	float dt{ static_cast<float>(ofGetLastFrameTime()) };
 
 
-	glm::vec3 velocityWorldSpace{ glm::mat3(rotate(-cameraHead, glm::vec3(0, 1, 0))) * cam.velocity };
+	glm::vec3 velocityWorldSpace{ glm::mat3((rotate(-cameraHead, glm::vec3(0, 1, 0)) * rotate(-cameraPitch, glm::vec3(1, 0, 0)))) * cam.velocity };
 	//glm::vec3 velocityWorldSpace{ glm::mat3(rotate(-cameraHead, glm::vec3(0, cameraPitch, 0))) * cam.velocity };
 	cam.pos += velocityWorldSpace * dt;
+	//cout << cam.pos << endl;
 
 
 
@@ -43,27 +45,53 @@ void ofApp::update() {
 void ofApp::draw() {
 	using namespace glm;
 
-
+	//ofEnableAlphaBlending();
 	float width{ static_cast<float>(ofGetViewportWidth()) };
 	float height{ static_cast<float>(ofGetViewportHeight()) };
 	float aspect = width / height;
-	mat4 model{ rotate(radians(45.0f), vec3(1, 1, 1)) * scale(vec3(0.25, 0.25, 0.25)) };
 
-	mat4 view{ (rotate(cameraPitch, vec3(1, 0, 0)) * rotate(cameraHead, vec3(0, 1, 0))) * translate(-cam.pos) };
-
-	mat4 proj{ perspective(radians(90.0f), aspect, 0.01f, 10.0f) };
-
-	mat4 mvp{ proj * view * model };
 
 	shader.begin();
-	shader.setUniformMatrix4f("mvp", mvp);
-	//object.draw();
-	objectVbo.drawElements(GL_TRIANGLES, objectVbo.getNumIndices());
-	//model = { translate(vec3(4, 0, -5)) * rotate(radians(0.0f), vec3(1,1,1)) };
+	for (int i = 0; i < 1000; i++)
+	{
+		mat4 model{ translate(vec3(-1, 0, 0)) * rotate(radians(0.0f), vec3(1, 1, 1)) * scale(vec3(0.5, 0.5, 0.5)) };
 
-	//shader.setUniformMatrix4f("mvp", proj * view * model);
-	//object2.draw();
+		mat4 view{ (rotate(cameraPitch, vec3(1, 0, 0)) * rotate(cameraHead, vec3(0, 1, 0))) * translate(-cam.pos) };
+
+		//cout << view << endl << endl;
+
+		mat4 proj{ perspective(radians(90.0f), aspect, 0.1f, 10.0f) };
+
+		mat4 mvp{ proj * view * model };
+
+		shader.setUniformMatrix4f("mvp", mvp);
+		shader.setUniformMatrix4f("modelView", view * model);
+		//object.draw();
+		objectVbo1.drawElements(GL_TRIANGLES, objectVbo1.getNumIndices());
+		//mat4 model{ rotate(radians(0.0f), vec3(1, 1, 5)) * scale(vec3(0.25, 0.25, 0.25)) };
+
+
+		model = { translate(vec3(1, 0, 0)) * rotate(radians(0.0f), vec3(1, 1, 10)) * scale(vec3(1, 1, 1)) };
+		mvp = { proj * view * model };
+		shader.setUniformMatrix4f("mvp", mvp);
+		shader.setUniformMatrix4f("modelView", view * model);
+
+		//shader.setUniformMatrix4f("mvp", proj * view * model);
+		//object2.draw();
+		objectVbo2.drawElements(GL_TRIANGLES, objectVbo2.getNumIndices());
+	}
 	shader.end();
+
+
+	//float distance = sqrt((pow2((view * model)[3][0])) + (pow2((view * model)[3][1])) + (pow2((view * model)[3][2])));
+
+	//shader.setUniform1f("distance2", distance);
+	//cout << smoothstep(0.1f, 10.0f, distance) << endl;
+
+	//shader.setUniform1f("distance2", smoothstep(10.0f, 0.1f, distance));
+	//shader.setUniform1f("distance1", distance);
+	//ofDisableAlphaBlending();
+
 }
 
 //--------------------------------------------------------------
@@ -175,10 +203,10 @@ void ofApp::gotMessage(ofMessage msg) {
 
 void ofApp::reloadShaders()
 {
-	if (needsReload) {
+	//if (needsReload) {
 		shader.load("shader.vert", "shader.frag");
-		needsReload = false;
-	}
+		//needsReload = false;
+	//}
 }
 
 void ofApp::updateCameraRotation(float dx, float dy)

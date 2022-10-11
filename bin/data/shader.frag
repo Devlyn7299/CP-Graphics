@@ -1,12 +1,18 @@
 #version 410
 
-in vec2 fragUV; // from vertex shader via rasterizer
-in vec3 fragNormal;
-out vec4 outColor;	// to frame buffer (usually screen)
+uniform float distance2;
+uniform float distance1;
 
+in vec2 fragUV; 
+in vec3 fragNormal;
+in vec4 cameraPos;
+
+out vec4 outColor;	
 
 void main()
 {
+	float camDistance = length(cameraPos);
+	float smoothTest = 1 - smoothstep(0.1f, 10.0f, camDistance);
 	vec3 normal = normalize(fragNormal);
-	outColor = vec4(fragNormal * 0.5 + vec3(1.0) * 0.5, 1.0);	
+	outColor = vec4(normal, smoothTest);	
 }

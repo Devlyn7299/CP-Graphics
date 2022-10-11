@@ -5,9 +5,9 @@
 struct CameraData
 {
 	glm::vec3 pos{ 0, 0, 1 };
-	float fov;
 	glm::vec3 velocity{};
-
+	float cameraHead{ 0 };
+	float cameraPitch{ 0 };
 };
 
 class ofApp : public ofBaseApp {
@@ -30,28 +30,20 @@ public:
 	void gotMessage(ofMessage msg);
 
 private:
-	ofMesh triangle{};
-	ofMesh quad{};
 	ofShader shader{};
-	ofImage img{};
-	ofMesh object;
+	ofMesh object1;
 	ofMesh object2;
 	ofVbo objectVbo1;
 	ofVbo objectVbo2;
-
-	bool needsReload{ true };
-	void reloadShaders();
 	CameraData cam;
-
 	int prevX{ 0 }, prevY{ 0 };
-
 	float mouseSensitivity{ 0.01f };
-
-	float cameraHead{ 0 };
-	float cameraPitch{ 0 };
+	bool allowMouseMovement{ true };
+	bool needsReload{ true };
+	
+	void reloadShaders();
 
 	void updateCameraRotation(float dx, float dy);
 
-	bool allowMouseMovement{ true };
 
 };

@@ -2,96 +2,85 @@
 
 //--------------------------------------------------------------
 void ofApp::setup() {
-	ofDisableArbTex(); //IMPORTANT
+	ofDisableArbTex(); 
 
 	reloadShaders();
 
 	ofEnableDepthTest();
 
-	object.load("NewTest.ply");
+	// Loading in oject1 and object2 and getting them set up
+	object1.load("NewTest.ply");
 	object2.load("Staff.ply");
-	object.flatNormals();
+	object1.flatNormals();
 	object2.flatNormals();
 
-	for (size_t i{ 0 }; i < object.getNumNormals(); i++)
+	for (size_t i{ 0 }; i < object1.getNumNormals(); i++)
 	{
-		object.setNormal(i, -object.getNormal(i));
-	}	for (size_t i{ 0 }; i < object2.getNumNormals(); i++)
+		object1.setNormal(i, -object1.getNormal(i));
+	}	
+	for (size_t i{ 0 }; i < object2.getNumNormals(); i++)
 	{
 		object2.setNormal(i, -object2.getNormal(i));
 	}
 
-	objectVbo1.setMesh(object, GL_STATIC_DRAW);
+	objectVbo1.setMesh(object1, GL_STATIC_DRAW);
 	objectVbo2.setMesh(object2, GL_STATIC_DRAW);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
-	reloadShaders();
+	// Reload if needed
+	if (needsReload)
+	{
+		reloadShaders();
+	}
 
 	float dt{ static_cast<float>(ofGetLastFrameTime()) };
 
-
-	glm::vec3 velocityWorldSpace{ glm::mat3((rotate(-cameraHead, glm::vec3(0, 1, 0)) * rotate(-cameraPitch, glm::vec3(1, 0, 0)))) * cam.velocity };
-	//glm::vec3 velocityWorldSpace{ glm::mat3(rotate(-cameraHead, glm::vec3(0, cameraPitch, 0))) * cam.velocity };
+	// Setting velocity world space and adding it to the camera position every update
+	glm::vec3 velocityWorldSpace{ glm::mat3((rotate(-cam.cameraHead, glm::vec3(0, 1, 0)) * rotate(-cam.cameraPitch, glm::vec3(1, 0, 0)))) * cam.velocity };
 	cam.pos += velocityWorldSpace * dt;
-	//cout << cam.pos << endl;
-
-
-
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 	using namespace glm;
 
-	//ofEnableAlphaBlending();
 	float width{ static_cast<float>(ofGetViewportWidth()) };
 	float height{ static_cast<float>(ofGetViewportHeight()) };
 	float aspect = width / height;
 
-
 	shader.begin();
+	// Stress testing with this for loop - drawing i copies of each mesh
+	// Currently set up so each mesh will be 5 units away from the last
 	for (int i = 0; i < 1000; i++)
 	{
-		mat4 model{ translate(vec3(-1, 0, 0)) * rotate(radians(0.0f), vec3(1, 1, 1)) * scale(vec3(0.5, 0.5, 0.5)) };
-
-		mat4 view{ (rotate(cameraPitch, vec3(1, 0, 0)) * rotate(cameraHead, vec3(0, 1, 0))) * translate(-cam.pos) };
-
-		//cout << view << endl << endl;
-
+		// Setting up MVP
+		mat4 model{ translate(vec3(-1, 0, -5*i)) * rotate(radians(0.0f), vec3(1, 1, 1)) * scale(vec3(0.5, 0.5, 0.5)) };
+		mat4 view{ (rotate(cam.cameraPitch, vec3(1, 0, 0)) * rotate(cam.cameraHead, vec3(0, 1, 0))) * translate(-cam.pos) };
 		mat4 proj{ perspective(radians(90.0f), aspect, 0.1f, 10.0f) };
 
 		mat4 mvp{ proj * view * model };
 
+		// Setting shader uniforms for MVP and ModelView
 		shader.setUniformMatrix4f("mvp", mvp);
 		shader.setUniformMatrix4f("modelView", view * model);
-		//object.draw();
+
+		// Drawing object1
 		objectVbo1.drawElements(GL_TRIANGLES, objectVbo1.getNumIndices());
-		//mat4 model{ rotate(radians(0.0f), vec3(1, 1, 5)) * scale(vec3(0.25, 0.25, 0.25)) };
 
-
-		model = { translate(vec3(1, 0, 0)) * rotate(radians(0.0f), vec3(1, 1, 10)) * scale(vec3(1, 1, 1)) };
+		// Giving Model a new value for object2
+		model = { translate(vec3(1, 0, -5*i)) * rotate(radians(0.0f), vec3(1, 1, 10)) * scale(vec3(1, 1, 1)) };
 		mvp = { proj * view * model };
+
+		// Resetting uniforms for object2
 		shader.setUniformMatrix4f("mvp", mvp);
 		shader.setUniformMatrix4f("modelView", view * model);
 
-		//shader.setUniformMatrix4f("mvp", proj * view * model);
-		//object2.draw();
+		// Drawing object2
 		objectVbo2.drawElements(GL_TRIANGLES, objectVbo2.getNumIndices());
 	}
 	shader.end();
-
-
-	//float distance = sqrt((pow2((view * model)[3][0])) + (pow2((view * model)[3][1])) + (pow2((view * model)[3][2])));
-
-	//shader.setUniform1f("distance2", distance);
-	//cout << smoothstep(0.1f, 10.0f, distance) << endl;
-
-	//shader.setUniform1f("distance2", smoothstep(10.0f, 0.1f, distance));
-	//shader.setUniform1f("distance1", distance);
-	//ofDisableAlphaBlending();
-
 }
 
 //--------------------------------------------------------------
@@ -100,6 +89,7 @@ void ofApp::keyPressed(int key) {
 		needsReload = true;
 	}
 
+	// Directional keys
 	if (key == 'w')
 	{
 		cam.velocity.z = -1;
@@ -116,6 +106,8 @@ void ofApp::keyPressed(int key) {
 	{
 		cam.velocity.x = 1;
 	}
+
+	// Added R and F to go up and down, relative to where the camera is pointing
 	else if (key == 'f')
 	{
 		cam.velocity.y = -1;
@@ -124,13 +116,12 @@ void ofApp::keyPressed(int key) {
 	{
 		cam.velocity.y = 1;
 	}
-	
 
+	// Allowing the user to disable mouseMovement with E
 	if (key == 'e')
 	{
 		allowMouseMovement = !allowMouseMovement;
 	}
-
 }
 
 //--------------------------------------------------------------
@@ -161,7 +152,6 @@ void ofApp::mouseMoved(int x, int y) {
 	}
 
 	// Remember where the mouse was this frame.
-
 	prevX = x;
 	prevY = y;
 }
@@ -203,17 +193,17 @@ void ofApp::gotMessage(ofMessage msg) {
 
 void ofApp::reloadShaders()
 {
-	//if (needsReload) {
+	if (needsReload) {
 		shader.load("shader.vert", "shader.frag");
-		//needsReload = false;
-	//}
+		needsReload = false;
+	}
 }
 
 void ofApp::updateCameraRotation(float dx, float dy)
 {
 	using namespace glm;
-	cameraHead += dx;
-	cameraPitch += dy;
+	cam.cameraHead += dx;
+	cam.cameraPitch += dy;
 }
 
 //--------------------------------------------------------------

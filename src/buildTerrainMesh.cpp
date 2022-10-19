@@ -17,8 +17,8 @@ void buildTerrainMesh(ofMesh& terrainMesh, const ofShortPixels& heightmap,
 			//if ( j > 300 && j < 400 && i > 150 && i < 300)
 			//cout << static_cast<float>(heightmap.getColor(j, i).r) / static_cast<float>(65535) << endl;
 			terrainMesh.addVertex(glm::vec3(static_cast<float>(j), 
-				(static_cast<float>(heightmap.getColor(j, i).r) / static_cast<float>(65535)) * 50, 
-				static_cast<float>(i)));
+				(static_cast<float>(heightmap.getColor(j, i).r) / static_cast<float>(65535)), 
+				static_cast<float>(i)) * scale);
 			//terrainMesh.addVertex(glm::vec3(j, 0, i));
 			//terrainMesh.addVertex(glm::vec3(j, heightmap.getColor(j, i+1).r / 65535, i+1));
 			//terrainMesh.addVertex(glm::vec3(j+1, heightmap.getColor(j+1, i).r / 65535, i));

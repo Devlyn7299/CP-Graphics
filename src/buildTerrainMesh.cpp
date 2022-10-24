@@ -3,87 +3,102 @@
 void buildTerrainMesh(ofMesh& terrainMesh, const ofShortPixels& heightmap, 
 	unsigned int xStart, unsigned int yStart, unsigned int xEnd, unsigned int yEnd, glm::vec3 scale)
 {
+	//cout << "Inner Test 1" << endl;
 
-	
+	int w = xEnd - xStart;
+	int d = yEnd - yStart;
 	// Will go left to right, top to bottom, by looping the y-coord, and looping x-coord within
-	// Grab every quad and make triangles with them
-	// (j,i), (j+1,i), (j+1,i+1), (j,i+1)
-	for (int i = yStart; i < yEnd; i ++)
+	// Grab every vertex
+	for (int y = yStart; y < yEnd; y++)
 	{
-		//cout << "loop " << i << endl;
+		//cout << "Inner Test 2" << endl;
 
-		for (int j = xStart; j < xEnd; j ++)
+		for (int x = xStart; x < xEnd; x++)
 		{
-			//if ( j > 300 && j < 400 && i > 150 && i < 300)
-			//cout << static_cast<float>(heightmap.getColor(j, i).r) / static_cast<float>(65535) << endl;
-			terrainMesh.addVertex(glm::vec3(static_cast<float>(j), 
-				(static_cast<float>(heightmap.getColor(j, i).r) / static_cast<float>(65535)), 
-				static_cast<float>(i)) * scale);
-			//terrainMesh.addVertex(glm::vec3(j, 0, i));
-			//terrainMesh.addVertex(glm::vec3(j, heightmap.getColor(j, i+1).r / 65535, i+1));
-			//terrainMesh.addVertex(glm::vec3(j+1, heightmap.getColor(j+1, i).r / 65535, i));
-			//terrainMesh.addVertex(glm::vec3(j+1, heightmap.getColor(j+1, i+1).r / 65535, i+1));
+			//cout << "Inner Test 3" << endl;
+			double h = heightmap.getColor(x, y).r;
+			terrainMesh.addVertex(ofPoint(x, h / USHRT_MAX, y) * scale);
+			//terrainMesh.addVertex(glm::vec3(static_cast<float>(j), 
+			//	(static_cast<float>(heightmap.getColor(j, i).r) / static_cast<float>(USHRT_MAX)), 
+			//	static_cast<float>(i)) * scale);
 		}
 	}
+	//cout << "Inner Test 4" << endl;
 
-	//for (int i = 0; i < xEnd * yEnd; i += 2)
+	//// Adding indices 
+	//for (int i = 0; i < yEnd - 1; i++)
 	//{
-	//	int indices[4]
-	//	{
-	//		i,
-	//		i + 1,
-	//		i + 2,
-	//		i + 3
-	//	};
+	//	//cout << "Inner Test 5" << endl;
 
-	//	terrainMesh.addIndex(indices[0]);
-	//	terrainMesh.addIndex(indices[1]);
-	//	terrainMesh.addIndex(indices[2]);
-	//	terrainMesh.addIndex(indices[2]);
-	//	terrainMesh.addIndex(indices[3]);
-	//	terrainMesh.addIndex(indices[0]);
+	//	for (int j = 0; j < xEnd - 1; j++)
+	//	{
+	//		//cout << "Inner Test 6" << endl;
+
+	//		terrainMesh.addIndex(j + i * xEnd);					
+	//		terrainMesh.addIndex(j + (i + 1) * xEnd);			
+	//		terrainMesh.addIndex((j + 1) + i * xEnd);			
+
+	//		terrainMesh.addIndex((j + 1) + (i + 1) * xEnd);		
+	//		terrainMesh.addIndex((j + 1) + i * xEnd);			
+	//		terrainMesh.addIndex(j + (i + 1) * xEnd);			
+
+	//	}
 	//}
 
-	for (int i = 0; i < yEnd - 1; i++)
+	for (int y = 0; y < yEnd - yStart - 1; y++)
 	{
-		for (int j = 0; j < xEnd - 1; j++)
+		for (int x = 0; x < xEnd - xStart - 1; x++)
 		{
-			terrainMesh.addIndex(j + i * xEnd);					// 0	// 1
-			terrainMesh.addIndex(j + (i + 1) * xEnd);			// 3	// 4
-			terrainMesh.addIndex((j + 1) + i * xEnd);			// 1	// 2
+			terrainMesh.addIndex(x + y * (xEnd - xStart));
+			terrainMesh.addIndex(x + (y + 1) * (xEnd - xStart));
+			terrainMesh.addIndex((x + 1) + y * (xEnd - xStart));
 
-			terrainMesh.addIndex((j + 1) + (i + 1) * xEnd);		// 4	// 5
-			terrainMesh.addIndex((j + 1) + i * xEnd);			// 1	// 2
-			terrainMesh.addIndex(j + (i + 1) * xEnd);			// 3	// 4
-
+			terrainMesh.addIndex((x + 1) + y * (xEnd - xStart));
+			terrainMesh.addIndex(x + (y + 1) * (xEnd - xStart));
+			terrainMesh.addIndex((x + 1) + (y + 1) * (xEnd - xStart));
 		}
 	}
+
+	//cout << "Inner Test 7" << endl;
 
 	terrainMesh.flatNormals();
+	//cout << "Inner Test 8" << endl;
+
 	for (size_t i{ 0 }; i < terrainMesh.getNumNormals(); i++) {
+		//cout << "Inner Test 9" << endl;
+
 		terrainMesh.setNormal(i, -terrainMesh.getNormal(i));
 	}
-	
 
 
-	//for (int y = 0; y < 100; y++) {
-	//	for (int x = 0; x < 100; x++) {
-	//		terrainMesh.addVertex(ofPoint(x, 0, y)); // make a new vertex
-	//		terrainMesh.addColor(ofFloatColor(0, 0, 0));  // add a color at that vertex
-	//	}
-	//}
+	/*
+	//Make vertices
+	int w = xEnd - xStart;
+	int d = yEnd - yStart;
+	for (int y = yStart; y < yEnd; y++)
+	{
+		for (int x = xStart; x < xEnd; x++)
+		{
+			double h = heightmap.getColor(x, y).r;
+			terrainMesh.addVertex(ofPoint(x, h / USHRT_MAX, y) * scale);
+		}
+	}
 
-	//// now it's important to make sure that each vertex is correctly connected with the
-	//// other vertices around it. This is done using indices, which you can set up like so:
-	//for (int y = 0; y < 100 - 1; y++) {
-	//	for (int x = 0; x < 100 - 1; x++) {
-	//		terrainMesh.addIndex(x + y * 100);               // 0
-	//		terrainMesh.addIndex((x + 1) + y * 100);           // 1
-	//		terrainMesh.addIndex(x + (y + 1) * 100);           // 10
+	//Connect vertices with triangles
+	for (int y = 0; y < yEnd - yStart - 1; y++)
+	{
+		for (int x = 0; x < xEnd - xStart - 1; x++)
+		{
+			terrainMesh.addIndex(x + y * (xEnd - xStart));
+			terrainMesh.addIndex(x + (y + 1) * (xEnd - xStart));
+			terrainMesh.addIndex((x + 1) + y * (xEnd - xStart));
 
-	//		terrainMesh.addIndex((x + 1) + y * 100);           // 1
-	//		terrainMesh.addIndex((x + 1) + (y + 1) * 100);       // 11
-	//		terrainMesh.addIndex(x + (y + 1) * 100);           // 10
-	//	}
-	//}
+			terrainMesh.addIndex((x + 1) + y * (xEnd - xStart));
+			terrainMesh.addIndex(x + (y + 1) * (xEnd - xStart));
+			terrainMesh.addIndex((x + 1) + (y + 1) * (xEnd - xStart));
+		}
+	}
+	terrainMesh.flatNormals();
+	*/
+
 }

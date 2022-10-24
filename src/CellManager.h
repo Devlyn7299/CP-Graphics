@@ -7,22 +7,22 @@ struct Cell
 {
 public:
     // The mesh containing the terrain geometry for the cell.
-    ofMesh terrainMesh {};
+    ofMesh terrainMesh{};
 
     // The VBO for the cell
-    ofVbo terrainVBO {};
+    ofVbo terrainVBO{};
 
     // The corner defining the mesh's location in world space.
-    glm::vec2 startPos {};
+    glm::vec2 startPos{};
 
     // Set to true while the mesh is loading so that it's not rendered mid-load.
-    bool loading { false };
+    bool loading{ false };
 
     // Set to false while the cell is inactive so that it's not rendered.
-    bool live { false };
+    bool live{ false };
 
     // Set to true after loading to refresh the VBO.
-    bool needsVBORefresh { false };
+    bool needsVBORefresh{ false };
 
     void draw()
     {
@@ -58,16 +58,16 @@ public:
     void initializeForPosition(glm::vec3 position)
     {
         // The range of loaded cells should be centered on the player.
-        glm::vec2 cellGridMidIndices { glm::round(glm::vec2(position.x, position.z) / cellSize) };
+        glm::vec2 cellGridMidIndices{ glm::round(glm::vec2(position.x, position.z) / cellSize) };
 
         // Calculate the actual start position of the first cell in the loaded grid.
         cellGridStartPos = (cellGridMidIndices - glm::vec2(CELL_PAIRS_PER_DIMENSION)) * cellSize;
 
         // Load each cell.
-        unsigned int bufferIndex { 0 };
-        for (unsigned int i { 0 }; i < 2 * CELL_PAIRS_PER_DIMENSION; i++)
+        unsigned int bufferIndex{ 0 };
+        for (unsigned int i{ 0 }; i < 2 * CELL_PAIRS_PER_DIMENSION; i++)
         {
-            for (unsigned int j { 0 }; j < 2 * CELL_PAIRS_PER_DIMENSION; j++)
+            for (unsigned int j{ 0 }; j < 2 * CELL_PAIRS_PER_DIMENSION; j++)
             {
                 initCell(cellBuffer[bufferIndex], (cellGridStartPos + glm::vec2(i, j) * cellSize));
                 bufferIndex++;
@@ -75,20 +75,20 @@ public:
         }
 
         // Start cell loading thread
-        cellLoadThread = std::thread 
+        cellLoadThread = std::thread
         {
-            [&] () 
-            { 
-                while (!stopping) 
-                { 
-                    processLoadQueue(); 
+            [&]()
+            {
+                while (!stopping)
+                {
+                    processLoadQueue();
 
                     if (cellLoadQueue.empty())
                     {
                         // Sleep for 0.1 seconds if the load queue is empty.
                         std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     }
-                } 
+                }
             }
         };
     }
@@ -98,31 +98,32 @@ public:
     // call processLoadQueue to actually load the meshes.
     void optimizeForPosition(glm::vec3 position)
     {
+        using namespace glm;
         // Calculate a lower bound (in each dimension) on where the lower grid can start.
-        glm::vec2 minGridStartIndices { glm::ceil(glm::vec2(position.x, position.z) / cellSize) - glm::vec2(CELL_PAIRS_PER_DIMENSION) };
+        glm::vec2 minGridStartIndices{ glm::ceil(glm::vec2(position.x, position.z) / cellSize) - glm::vec2(CELL_PAIRS_PER_DIMENSION) };
 
         // Calculate the actual start position of the first cell in the loaded grid at the lower bound in each dimension.
-        glm::vec2 minGridStartPos { minGridStartIndices * cellSize };
+        glm::vec2 minGridStartPos{ minGridStartIndices * cellSize };
 
         // THe actual start position of the first cell in the loaded grid at the upper bound in each dimension.
-        glm::vec2 maxGridStartPos { minGridStartPos + glm::vec2(cellSize) };
+        glm::vec2 maxGridStartPos{ minGridStartPos + glm::vec2(cellSize) };
 
         // Only move the grid of loaded cells if it's outside of the lower / upper bounds.
         // This ensures that unnecessary loading doesn't occur.
-        glm::vec2 newGridStartPos { clamp(cellGridStartPos, minGridStartPos, maxGridStartPos) };
+        glm::vec2 newGridStartPos{ clamp(cellGridStartPos, minGridStartPos, maxGridStartPos) };
 
         // Only do something if the grid of loaded cells needs to change.
         if (newGridStartPos != cellGridStartPos)
         {
-            int bufferIndex { 0 };
+            int bufferIndex{ 0 };
 
             if (newGridStartPos.x > cellGridStartPos.x)
             {
                 // Loop in case a cell was skipped over (only for very fast movement; usually will only run once).
-                for (float x { cellGridStartPos.x + cellSize }; x <= newGridStartPos.x + 0.00001f; x += cellSize)
+                for (float x{ cellGridStartPos.x + cellSize }; x <= newGridStartPos.x + 0.00001f; x += cellSize)
                 {
                     // Add new cells to the right of the old active region
-                    for (unsigned int j { 0 }; j < 2 * CELL_PAIRS_PER_DIMENSION; j++)
+                    for (unsigned int j{ 0 }; j < 2 * CELL_PAIRS_PER_DIMENSION; j++)
                     {
                         cellLoadQueue.push(vec2(x, newGridStartPos.y) + glm::vec2(2 * CELL_PAIRS_PER_DIMENSION - 1, j) * cellSize);
                     }
@@ -131,10 +132,10 @@ public:
             else if (newGridStartPos.x < cellGridStartPos.x)
             {
                 // Loop in case a cell was skipped over (only for very fast movement; usually will only run once).
-                for (float x { cellGridStartPos.x - cellSize }; x >= newGridStartPos.x - 0.00001f; x -= cellSize)
+                for (float x{ cellGridStartPos.x - cellSize }; x >= newGridStartPos.x - 0.00001f; x -= cellSize)
                 {
                     // Add new cells to the left of the old active region
-                    for (unsigned int j { 0 }; j < 2 * CELL_PAIRS_PER_DIMENSION; j++)
+                    for (unsigned int j{ 0 }; j < 2 * CELL_PAIRS_PER_DIMENSION; j++)
                     {
                         cellLoadQueue.push(vec2(x, newGridStartPos.y + j * cellSize));
                     }
@@ -166,10 +167,10 @@ public:
             if (newGridStartPos.y > cellGridStartPos.y)
             {
                 // Loop in case a cell was skipped over (only for very fast movement; usually will only run once).
-                for (float y { cellGridStartPos.y + cellSize }; y <= newGridStartPos.y + 0.00001f; y += cellSize)
+                for (float y{ cellGridStartPos.y + cellSize }; y <= newGridStartPos.y + 0.00001f; y += cellSize)
                 {
                     // Add the top cells
-                    for (float x { startX }; x <= endX + 0.00001f; x += cellSize)
+                    for (float x{ startX }; x <= endX + 0.00001f; x += cellSize)
                     {
                         cellLoadQueue.push(vec2(x, y + (2 * CELL_PAIRS_PER_DIMENSION - 1) * cellSize));
                     }
@@ -178,10 +179,10 @@ public:
             else if (newGridStartPos.y < cellGridStartPos.y)
             {
                 // Loop in case a cell was skipped over (only for very fast movement; usually will only run once).
-                for (float y { cellGridStartPos.y - cellSize }; y >= newGridStartPos.y - 0.00001f; y -= cellSize)
+                for (float y{ cellGridStartPos.y - cellSize }; y >= newGridStartPos.y - 0.00001f; y -= cellSize)
                 {
                     // Add the bottom cells
-                    for (float x { startX }; x <= endX + 0.00001f; x += cellSize)
+                    for (float x{ startX }; x <= endX + 0.00001f; x += cellSize)
                     {
                         cellLoadQueue.push(vec2(x, y));
                     }
@@ -221,10 +222,10 @@ public:
 
 private:
     // The maximum number of cells that can be currently loaded at once.
-    const static unsigned int CELL_BUFFER_SIZE { 4 * CELL_PAIRS_PER_DIMENSION * CELL_PAIRS_PER_DIMENSION };
+    const static unsigned int CELL_BUFFER_SIZE{ 4 * CELL_PAIRS_PER_DIMENSION * CELL_PAIRS_PER_DIMENSION };
 
     // The buffer of loaded cells.
-    Cell cellBuffer[CELL_BUFFER_SIZE] {};
+    Cell cellBuffer[CELL_BUFFER_SIZE]{};
 
     // A reference to the pixel array containing the world heightmap.
     const ofShortImage& heightmap{ nullptr };
@@ -238,13 +239,13 @@ private:
     glm::vec2 cellGridStartPos;
 
     // A queue containing the corners of cells that need to be loaded.
-    std::queue<glm::vec2> cellLoadQueue {};
+    std::queue<glm::vec2> cellLoadQueue{};
 
     // Thread to load cells in the background.
-    std::thread cellLoadThread {};
+    std::thread cellLoadThread{};
 
     // Flag to signal the cell loading thread to stop.
-    bool stopping {};
+    bool stopping{};
 
     bool isCellDistant(glm::vec2 cellStartPos)
     {
@@ -275,6 +276,7 @@ private:
     // The third parameter is the dimensions (in pixels) of the cell to load.
     void buildMeshForTerrainCell(ofMesh& terrainMesh, glm::uvec2 startPos, glm::uvec2 size) const
     {
+        using namespace glm;
         if (startPos.x < heightmap.getWidth() && startPos.y < heightmap.getHeight())
         {
             // Clamp the size to the bounds of the heightmap
@@ -282,10 +284,10 @@ private:
 
             // Use buildTerrainMesh() to initialize or re-initialize the mesh.
             // The scale parameter taken by buildTerrainMesh needs to be relative to the dimensions of the heightmap
-            buildTerrainMesh(terrainMesh, heightmap.getPixels(), startPos.x, startPos.y, startPos.x + size.x, startPos.y + size.y, vec3(1, heightmapScale, 1));
+            buildTerrainMesh(terrainMesh, heightmap.getPixels(), startPos.x, startPos.y, startPos.x + size.x + 1, startPos.y + size.y + 1, vec3(1, heightmapScale, 1));
         }
     }
-    
+
     void initCell(Cell& cell, glm::vec2 startPos)
     {
         // Set cell's starting position, it is current loading and not yet live.
@@ -293,7 +295,7 @@ private:
         cell.live = false;
         cell.loading = true;
         // Remap to the resolution of the heightmap and round to the nearest integer
-        glm::uvec2 startIndices { round(glm::vec2(startPos.x, startPos.y)) };
+        glm::uvec2 startIndices{ round(glm::vec2(startPos.x, startPos.y)) };
 
         // Clear the old terrain mesh and rebuild it for the current cell.
         cell.terrainMesh.clear();
@@ -322,7 +324,7 @@ private:
                 }
             }
 
-            unsigned int bufferIndex { 0 };
+            unsigned int bufferIndex{ 0 };
 
             // Check to ensure that there are available cells in the buffer and that there are still cell requests left to process.
             if (bufferIndex < CELL_BUFFER_SIZE && !cellLoadQueue.empty())

@@ -1,5 +1,6 @@
 #pragma once
 #include "ofMain.h"
+#include "CellManager.h"
 
 class ofApp : public ofBaseApp
 {
@@ -19,10 +20,14 @@ public:
     void windowResized(int w, int h);
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
+    void exit();
+
 
 private:
     // 3D perspective shader
     ofShader shader;
+
+    ofShader waterShader;
 
     // Torus mesh object
     ofMesh torusMesh;
@@ -60,14 +65,25 @@ private:
     glm::vec3 velocity{ };
 
     // Position of the camera in world space
-    glm::vec3 position{ 0, 10, 0 };
+    glm::vec3 position{ };
+
+
 
     // update camera rotation based on mouse movement
     void updateCameraRotation(float dx, float dy);
 
     ofMesh terrainMesh;
 
+    ofShortImage heightmap{};
+
+    ofShortImage heightmapHiRes{};
+
     bool allowMouseMovement{ true };
+
+    ofMesh water;
+
+    CellManager<7> cellManager{ heightmapHiRes, 1600, 256 };
+
 
 
     //ofShortPixels heightmap;

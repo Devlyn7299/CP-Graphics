@@ -20,29 +20,29 @@ public:
     void windowResized(int w, int h);
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
-    void exit();
 
 
 private:
     // 3D perspective shader
     ofShader shader;
 
-    ofShader waterShader;
+    // mesh for the low resolution terrain
+    ofMesh terrainMesh;
 
-    // Torus mesh object
-    ofMesh torusMesh;
+    // image used to build low resolution terrain mesh
+    ofShortImage heightmap{};
 
-    // Cube mesh object
-    ofMesh cubeMesh;
+    // image used to build high resolutino terrain mesh
+    ofShortImage heightmapHiRes{};
 
-    // Circle mesh object
-    ofMesh circleMesh;
+    // mesh for the water
+    ofMesh water;
 
-    // Cylinder mesh object
-    ofMesh cylinderMesh;
+    // CellManager used to build cells of the high resolution heightmap mesh
+    CellManager<7> cellManager{ heightmapHiRes, 1600, 256 };
 
-    // Sphere mesh object
-    ofMesh sphereMesh;
+    // boolean that either allows or disallows mouse movement
+    bool allowMouseMovement{ true };
 
     // Do shaders need to be reloaded?
     bool needsReload{ true };
@@ -59,7 +59,11 @@ private:
     // The current head direction of the camera in radians.
     float cameraHead{ 0 };
 
+    // The current pitch direction of the camera in radians
     float cameraPitch{ 0 };
+
+    // update camera rotation based on mouse movement
+    void updateCameraRotation(float dx, float dy);
 
     // Velocity of the camera (from WASD) -- in camera space
     glm::vec3 velocity{ };
@@ -67,24 +71,6 @@ private:
     // Position of the camera in world space
     glm::vec3 position{ };
 
-
-
-    // update camera rotation based on mouse movement
-    void updateCameraRotation(float dx, float dy);
-
-    ofMesh terrainMesh;
-
-    ofShortImage heightmap{};
-
-    ofShortImage heightmapHiRes{};
-
-    bool allowMouseMovement{ true };
-
-    ofMesh water;
-
-    CellManager<7> cellManager{ heightmapHiRes, 1600, 256 };
-
-
-
-    //ofShortPixels heightmap;
+    // Exit function to be used for the cellManager when the program is closed
+    void exit();
 };

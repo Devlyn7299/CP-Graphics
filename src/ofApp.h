@@ -1,5 +1,6 @@
 #pragma once
 #include "ofMain.h"
+#include "CellManager.h"
 
 class ofApp : public ofBaseApp
 {
@@ -20,24 +21,28 @@ public:
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
 
+
 private:
     // 3D perspective shader
     ofShader shader;
 
-    // Torus mesh object
-    ofMesh torusMesh;
+    // mesh for the low resolution terrain
+    ofMesh terrainMesh;
 
-    // Cube mesh object
-    ofMesh cubeMesh;
+    // image used to build low resolution terrain mesh
+    ofShortImage heightmap{};
 
-    // Circle mesh object
-    ofMesh circleMesh;
+    // image used to build high resolutino terrain mesh
+    ofShortImage heightmapHiRes{};
 
-    // Cylinder mesh object
-    ofMesh cylinderMesh;
+    // mesh for the water
+    ofMesh water;
 
-    // Sphere mesh object
-    ofMesh sphereMesh;
+    // CellManager used to build cells of the high resolution heightmap mesh
+    CellManager<7> cellManager{ heightmapHiRes, 1600, 256 };
+
+    // boolean that either allows or disallows mouse movement
+    bool allowMouseMovement{ true };
 
     // Do shaders need to be reloaded?
     bool needsReload{ true };
@@ -54,21 +59,18 @@ private:
     // The current head direction of the camera in radians.
     float cameraHead{ 0 };
 
+    // The current pitch direction of the camera in radians
     float cameraPitch{ 0 };
+
+    // update camera rotation based on mouse movement
+    void updateCameraRotation(float dx, float dy);
 
     // Velocity of the camera (from WASD) -- in camera space
     glm::vec3 velocity{ };
 
     // Position of the camera in world space
-    glm::vec3 position{ 0, 10, 0 };
+    glm::vec3 position{ };
 
-    // update camera rotation based on mouse movement
-    void updateCameraRotation(float dx, float dy);
-
-    ofMesh terrainMesh;
-
-    bool allowMouseMovement{ true };
-
-
-    //ofShortPixels heightmap;
+    // Exit function to be used for the cellManager when the program is closed
+    void exit();
 };

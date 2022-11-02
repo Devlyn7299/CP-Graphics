@@ -1,6 +1,7 @@
 #pragma once
 #include "ofMain.h"
-#include "CellManager.h"
+#include "Camera.h"
+#include "NewSceneGraph.h"
 
 class ofApp : public ofBaseApp
 {
@@ -21,56 +22,47 @@ public:
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
 
-
 private:
     // 3D perspective shader
     ofShader shader;
 
-    // mesh for the low resolution terrain
-    ofMesh terrainMesh;
-
-    // image used to build low resolution terrain mesh
-    ofShortImage heightmap{};
-
-    // image used to build high resolutino terrain mesh
-    ofShortImage heightmapHiRes{};
-
-    // mesh for the water
-    ofMesh water;
-
-    // CellManager used to build cells of the high resolution heightmap mesh
-    CellManager<7> cellManager{ heightmapHiRes, 1600, 256 };
-
-    // boolean that either allows or disallows mouse movement
-    bool allowMouseMovement{ true };
+    // Torus mesh object
+    ofMesh torusMesh;
+    ofMesh coneMesh;
+    ofMesh cubeMesh;
+    ofMesh cylinderMesh;
+    ofMesh sphereMesh;
 
     // Do shaders need to be reloaded?
-    bool needsReload{ true };
+    bool needsReload { true };
 
     // Load the shaders for this app
     void reloadShaders();
 
     // (x, y) from the previous frame
-    int prevX{ 0 }, prevY{ 0 };
+    int prevX { 0 }, prevY { 0 };
 
     // How many radians of rotation correspond to a single pixel of movement of the cursor.
-    float mouseSensitivity{ 0.02f };
+    float mouseSensitivity { 0.02f };
 
     // The current head direction of the camera in radians.
-    float cameraHead{ 0 };
+    float cameraHead { 0 };
 
-    // The current pitch direction of the camera in radians
-    float cameraPitch{ 0 };
+    // The current pitch angle of the camera in radians.
+    float cameraPitch { 0 };
+
+    // Velocity of the camera (from WASD) -- in camera space
+    glm::vec3 velocity { };
+
+    // Position of the camera in world space
+    Camera camera { glm::vec3(0, 0, 2) };
+
+    // Custom scene graph
+    NewSceneGraph sceneGraph {};
 
     // update camera rotation based on mouse movement
     void updateCameraRotation(float dx, float dy);
 
-    // Velocity of the camera (from WASD) -- in camera space
-    glm::vec3 velocity{ };
+    array<ofMesh, 5> meshArray[];
 
-    // Position of the camera in world space
-    glm::vec3 position{ };
-
-    // Exit function to be used for the cellManager when the program is closed
-    void exit();
 };

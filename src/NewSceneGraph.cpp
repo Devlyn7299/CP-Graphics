@@ -46,68 +46,69 @@ void NewSceneGraph::setup(const ofMesh& mesh1, const ofMesh& mesh2, const ofMesh
 
     meshAnimNode->childNodes.emplace_back(new SimpleAnimationNode{ 0.0f, vec3(1, 0, 0) });
     auto jointNode { meshAnimNode->childNodes.back() };
-    jointNode->localTransform = translate(vec3(0, 1.5f, 0)) * scale(vec3(0.5f));
+    jointNode->localTransform = rotate(radians(90.0f), vec3(1.0f, 0, 0)) * translate(vec3(0, 0, -1.0f)) * scale(vec3(0.5f));
     jointNode->childNodes.push_back(meshNode);
 
     jointNode->childNodes.emplace_back(new SceneGraphNode());
     auto staticTranslation{ jointNode->childNodes.back() };
-    staticTranslation->localTransform = translate(vec3(0, 1.5f, 0));
+    staticTranslation->childNodes.emplace_back(new SimpleDrawNode{ mesh3, shader });
 
-    staticTranslation->childNodes.emplace_back(new SimpleAnimationNode{ 0.0f, vec3(0, 0, 1) });
+    staticTranslation->localTransform = translate(vec3(0, 0, -1.0f));
+
     auto jointNode2{ staticTranslation->childNodes.back() };
-    jointNode2->localTransform = scale(vec3(0.5f));
+    //jointNode2->localTransform = scale(vec3(0.5f));
     jointNode2->childNodes.push_back(meshNode);
 
 
-    // Left leg
-    meshAnimNode->childNodes.emplace_back(new SimpleDrawNode{ mesh3, shader });
-    meshNode = meshAnimNode->childNodes.back();
+    //// Left leg
+    //meshAnimNode->childNodes.emplace_back(new SimpleDrawNode{ mesh3, shader });
+    //meshNode = meshAnimNode->childNodes.back();
 
-    meshAnimNode->childNodes.emplace_back(new SimpleAnimationNode{ 0.0f, vec3(1, 0, 0) });
-    jointNode = { meshAnimNode->childNodes.back() };
-    jointNode->localTransform = translate(vec3(0.75f, -1.5f, 0)) * scale(vec3(0.3f, 1.0f, 0.3f));
-    jointNode->childNodes.push_back(meshNode);
+    //meshAnimNode->childNodes.emplace_back(new SimpleAnimationNode{ 0.0f, vec3(1, 0, 0) });
+    //jointNode = { meshAnimNode->childNodes.back() };
+    //jointNode->localTransform = translate(vec3(0.75f, -1.5f, 0)) * scale(vec3(0.3f, 1.0f, 0.3f));
+    //jointNode->childNodes.push_back(meshNode);
 
-    // Right leg
-    meshAnimNode->childNodes.emplace_back(new SimpleAnimationNode{ 0.0f, vec3(1, 0, 0) });
-    jointNode = { meshAnimNode->childNodes.back() };
-    jointNode->localTransform = translate(vec3(-0.75f, -1.5f, 0)) * scale(vec3(0.3f, 1.0f, 0.3f));
-    jointNode->childNodes.push_back(meshNode);
+    //// Right leg
+    //meshAnimNode->childNodes.emplace_back(new SimpleAnimationNode{ 0.0f, vec3(1, 0, 0) });
+    //jointNode = { meshAnimNode->childNodes.back() };
+    //jointNode->localTransform = translate(vec3(-0.75f, -1.5f, 0)) * scale(vec3(0.3f, 1.0f, 0.3f));
+    //jointNode->childNodes.push_back(meshNode);
 
 
-    // Left arm
-    //meshAnimNode->childNodes.emplace_back(new SimpleAnimationNode{ 2.0f, vec3(1, 1, 0) });
-    meshAnimNode->childNodes.emplace_back(new SimpleDrawNode{ mesh4, shader });
-    meshNode = meshAnimNode->childNodes.back();
+    //// Left arm
+    ////meshAnimNode->childNodes.emplace_back(new SimpleAnimationNode{ 2.0f, vec3(1, 1, 0) });
+    //meshAnimNode->childNodes.emplace_back(new SimpleDrawNode{ mesh4, shader });
+    //meshNode = meshAnimNode->childNodes.back();
 
-    meshAnimNode->childNodes.emplace_back(new SimpleAnimationNode{ 1.0f, vec3(1, 0, 0) });
-    jointNode = { meshAnimNode->childNodes.back() };
-    jointNode->localTransform = translate(vec3(1.5f, 0, 0)) * scale(vec3(0.5f, 1.0f, 0.5f));
-    jointNode->childNodes.push_back(meshNode);
+    //meshAnimNode->childNodes.emplace_back(new SimpleAnimationNode{ 1.0f, vec3(1, 0, 0) });
+    //jointNode = { meshAnimNode->childNodes.back() };
+    //jointNode->localTransform = translate(vec3(1.5f, 0, 0)) * scale(vec3(0.5f, 1.0f, 0.5f));
+    //jointNode->childNodes.push_back(meshNode);
 
-    jointNode->childNodes.emplace_back(new SceneGraphNode());
-    staticTranslation = { jointNode->childNodes.back() };
-    staticTranslation->localTransform = translate(vec3(0, -1, 0));
+    //jointNode->childNodes.emplace_back(new SceneGraphNode());
+    //staticTranslation = { jointNode->childNodes.back() };
+    //staticTranslation->localTransform = translate(vec3(0, -1, 0));
 
-    staticTranslation->childNodes.emplace_back(new SimpleAnimationNode{ 4.0f, vec3(0, 0, 1) });
-    jointNode2 = { staticTranslation->childNodes.back() };
-    jointNode2->localTransform = scale(vec3(0.5f));
-    jointNode2->childNodes.push_back(meshNode);
+    //staticTranslation->childNodes.emplace_back(new SimpleAnimationNode{ 4.0f, vec3(0, 0, 1) });
+    //jointNode2 = { staticTranslation->childNodes.back() };
+    //jointNode2->localTransform = scale(vec3(0.5f));
+    //jointNode2->childNodes.push_back(meshNode);
 
-    // Right Arm
-    meshAnimNode->childNodes.emplace_back(new SimpleAnimationNode{ 1.0f, vec3(1, 0, 0) });
-    jointNode={ meshAnimNode->childNodes.back() };
-    jointNode->localTransform = translate(vec3(-1.5f, 0, 0)) * scale(vec3(0.5f, 1.0f, 0.5f));
-    jointNode->childNodes.push_back(meshNode);
+    //// Right Arm
+    //meshAnimNode->childNodes.emplace_back(new SimpleAnimationNode{ 1.0f, vec3(1, 0, 0) });
+    //jointNode={ meshAnimNode->childNodes.back() };
+    //jointNode->localTransform = translate(vec3(-1.5f, 0, 0)) * scale(vec3(0.5f, 1.0f, 0.5f));
+    //jointNode->childNodes.push_back(meshNode);
 
-    jointNode->childNodes.emplace_back(new SceneGraphNode());
-    staticTranslation={ jointNode->childNodes.back() };
-    staticTranslation->localTransform = translate(vec3(0, -1, 0));
+    //jointNode->childNodes.emplace_back(new SceneGraphNode());
+    //staticTranslation={ jointNode->childNodes.back() };
+    //staticTranslation->localTransform = translate(vec3(0, -1, 0));
 
-    staticTranslation->childNodes.emplace_back(new SimpleAnimationNode{ 4.0f, vec3(0, 0, 1) });
-    jointNode2={ staticTranslation->childNodes.back() };
-    jointNode2->localTransform = scale(vec3(0.5f));
-    jointNode2->childNodes.push_back(meshNode);
+    //staticTranslation->childNodes.emplace_back(new SimpleAnimationNode{ 4.0f, vec3(0, 0, 1) });
+    //jointNode2={ staticTranslation->childNodes.back() };
+    //jointNode2->localTransform = scale(vec3(0.5f));
+    //jointNode2->childNodes.push_back(meshNode);
 
 
 

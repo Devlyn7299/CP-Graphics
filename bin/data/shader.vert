@@ -6,12 +6,16 @@ layout (location = 3) in vec2 uv;
 
 out vec3 fragNormal;
 out vec2 fragUV;
+out vec4 cameraPos;
 
+uniform mat3 normalMatrix;
 uniform mat4 mvp; 
+uniform mat4 modelView;
 
 void main()
 {
     gl_Position = mvp * vec4(position, 1.0);
-    fragNormal = normal;
+    fragNormal = normalMatrix * normal;
     fragUV = vec2(uv.x, 1.0 - uv.y);
+    cameraPos = modelView * vec4(position, 1.0);
 }

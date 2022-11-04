@@ -1,5 +1,8 @@
 #pragma once
 #include "ofMain.h"
+#include "Camera.h"
+#include "NewSceneGraph.h"
+//#include "MySceneGraph.h"
 
 class ofApp : public ofBaseApp
 {
@@ -26,49 +29,42 @@ private:
 
     // Torus mesh object
     ofMesh torusMesh;
-
-    // Cube mesh object
+    ofMesh coneMesh;
     ofMesh cubeMesh;
-
-    // Circle mesh object
-    ofMesh circleMesh;
-
-    // Cylinder mesh object
     ofMesh cylinderMesh;
-
-    // Sphere mesh object
     ofMesh sphereMesh;
 
     // Do shaders need to be reloaded?
-    bool needsReload{ true };
+    bool needsReload { true };
 
     // Load the shaders for this app
     void reloadShaders();
 
     // (x, y) from the previous frame
-    int prevX{ 0 }, prevY{ 0 };
+    int prevX { 0 }, prevY { 0 };
 
     // How many radians of rotation correspond to a single pixel of movement of the cursor.
-    float mouseSensitivity{ 0.02f };
+    float mouseSensitivity { 0.02f };
 
     // The current head direction of the camera in radians.
-    float cameraHead{ 0 };
+    float cameraHead { 0 };
 
-    float cameraPitch{ 0 };
+    // The current pitch angle of the camera in radians.
+    float cameraPitch { 0 };
 
     // Velocity of the camera (from WASD) -- in camera space
-    glm::vec3 velocity{ };
+    glm::vec3 velocity { };
 
     // Position of the camera in world space
-    glm::vec3 position{ 0, 10, 0 };
+    Camera camera { glm::vec3(0, 0, 2) };
+
+    // Custom scene graph
+    NewSceneGraph sceneGraph {};
+    //MySceneGraph sceneGraph{};
 
     // update camera rotation based on mouse movement
     void updateCameraRotation(float dx, float dy);
 
-    ofMesh terrainMesh;
+    array<ofMesh, 5> meshArray[];
 
-    bool allowMouseMovement{ true };
-
-
-    //ofShortPixels heightmap;
 };

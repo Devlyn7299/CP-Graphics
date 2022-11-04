@@ -34,18 +34,18 @@ void MySceneGraph::setup(const ofMesh& torusMesh, const ofShader& shader)
     jointNode2->localTransform = translate(vec3(0.5f, 0, 0)) * scale(vec3(0.5f));
     jointNode2->childNodes.push_back(torusMeshNode);
 
-    //auto prevTorusNode { torusAnimNode };
+    auto prevTorusNode { torusAnimNode };
 
-    //for (int i { 0 }; i < 5; i++)
-    //{
-    //    // Adding another copy of torus as child of previous node
-    //    prevTorusNode->childNodes.emplace_back(new SceneGraphNode {});
-    //    auto nextTorus { prevTorusNode->childNodes.back() };
-    //    nextTorus->localTransform = translate(vec3(1.5f, 0, 0)) * scale(vec3(0.5f));
-    //    nextTorus->childNodes.push_back(torusMeshNode);
+    for (int i { 0 }; i < 5; i++)
+    {
+        // Adding another copy of torus as child of previous node
+        prevTorusNode->childNodes.emplace_back(new SceneGraphNode {});
+        auto nextTorus { prevTorusNode->childNodes.back() };
+        nextTorus->localTransform = translate(vec3(1.5f, 0, 0)) * scale(vec3(0.5f));
+        nextTorus->childNodes.push_back(torusMeshNode);
 
-    //    prevTorusNode = nextTorus;
-    //}
+        prevTorusNode = nextTorus;
+    }
 
     //// add a torus not part of the rotating chain
     //rootNode.childNodes.emplace_back(new SceneGraphNode {});

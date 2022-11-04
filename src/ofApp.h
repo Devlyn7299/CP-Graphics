@@ -2,6 +2,7 @@
 #include "ofMain.h"
 #include "Camera.h"
 #include "NewSceneGraph.h"
+//#include "MySceneGraph.h"
 
 class ofApp : public ofBaseApp
 {
@@ -59,6 +60,7 @@ private:
 
     // Custom scene graph
     NewSceneGraph sceneGraph {};
+    //MySceneGraph sceneGraph{};
 
     // update camera rotation based on mouse movement
     void updateCameraRotation(float dx, float dy);

@@ -20,6 +20,7 @@ void ofApp::setup()
     
     // Set up scene graph
     sceneGraph.setup(torusMesh, coneMesh, cubeMesh, cylinderMesh, sphereMesh, shader);
+    //sceneGraph.setup(torusMesh, shader);
 }
 
 void ofApp::reloadShaders()

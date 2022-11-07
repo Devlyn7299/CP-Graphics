@@ -6,14 +6,18 @@ in vec3 worldPosition;
 
 out vec4 outColor;
 
-uniform vec3 dirLightDir;
-uniform vec3 dirLightColor;
 uniform vec3 meshColor;
 uniform vec3 ambientColor;
 
+// Uniform variables for directional lights
+uniform vec3 dirLightDir;
+uniform vec3 dirLightColor;
+
+// Uniform variables for point lights
 uniform vec3 pointLightPos;
 uniform vec3 pointLightColor;
 
+// Uniform variables for spot lights
 uniform vec3 spotLightColor;
 uniform vec3 spotLightConeDir;
 uniform vec3 spotLightPos;
@@ -38,9 +42,10 @@ void main()
     float cosAngle = dot(spotLightDir, -spotLightConeDir);
     float spotNDotL = max(0, dot(normal, spotLightDir));
     vec3 spotLight;
-    if (cosAngle > spotLightCutoff) {
+    if (cosAngle > spotLightCutoff) 
+    {
         spotLight = spotLightColor * spotNDotL;
-        }
+    }
 
     // how much light the surface effectively receives
     vec3 irradiance;
@@ -54,5 +59,4 @@ void main()
 
     // gamma encoding
     outColor = vec4(pow(linearColor, vec3(1.0/2.2)), 1.0);
-    //outColor = vec4(normal * 0.5 + vec3(0.5), 1.0);
 }

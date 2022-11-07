@@ -27,7 +27,7 @@ private:
     // 3D perspective shader
     ofShader shader;
 
-    // Torus mesh object
+    // Mesh objects
     ofMesh torusMesh;
     ofMesh coneMesh;
     ofMesh cubeMesh;
@@ -63,11 +63,9 @@ private:
 
     // Custom scene graph
     NewSceneGraph sceneGraph {};
-    //MySceneGraph sceneGraph{};
 
     // update camera rotation based on mouse movement
     void updateCameraRotation(float dx, float dy);
 
-    //array<ofMesh, 5> meshArray[];
 
 };

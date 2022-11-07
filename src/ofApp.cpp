@@ -11,7 +11,7 @@ void ofApp::setup()
     // Load shaders for the first time
     reloadShaders();
 
-    // Load torus mesh
+    // Load meshes
     torusMesh.load("models/torus.ply");
     coneMesh.load("models/cone.ply");
     cubeMesh.load("models/cube.ply");
@@ -20,8 +20,6 @@ void ofApp::setup()
     
     // Set up scene graph
     sceneGraph.setup(torusMesh, coneMesh, cubeMesh, cylinderMesh, sphereMesh, shader);
-    //sceneGraph.setup(torusMesh, shader);
-    //sceneGraph.lighting.pointLight.position = camera.position;
 }
 
 void ofApp::reloadShaders()
@@ -35,8 +33,6 @@ void ofApp::updateCameraRotation(float dx, float dy)
     using namespace glm;
 
     cameraPitch += dy;
-    // -89 to +89 degrees, converted to radians
-    //cameraPitch = clamp(cameraPitch, radians(-89.0f), radians(89.0f));
 
     cameraHead += dx;
 }
@@ -61,11 +57,8 @@ void ofApp::update()
     camera.position += velocityWorldSpace * dt;
 
     // Update rotation
-    camera.rotation = rotate(-cameraHead, vec3(0, 1, 0)) *
-        rotate(-cameraPitch, vec3(1, 0, 0));
+    camera.rotation = rotate(-cameraHead, vec3(0, 1, 0)) * rotate(-cameraPitch, vec3(1, 0, 0));
 
-    //sceneGraph.lighting.pointLight.position = camera.position;
-    //cout << sceneGraph.lighting.pointLight.position << endl;
     // Update scene graph
     sceneGraph.rootNode.updateSceneGraph(dt);
 }

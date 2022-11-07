@@ -10,7 +10,7 @@ public:
     // Root node of the scene graph
     SceneGraphNode rootNode {};
 
-//private:
+private:
     std::shared_ptr<SceneGraphNode> meshAnimNode;
     Lighting lighting{};   // Lighting for the scene
 };

@@ -1,5 +1,7 @@
 #pragma once
 #include "SceneGraphNode.h"
+#include "Lighting.h"
+
 
 class MySceneGraph
 {
@@ -9,6 +11,8 @@ public:
     // Root node of the scene graph
     SceneGraphNode rootNode {};
 
-private:
+//private:
     std::shared_ptr<SceneGraphNode> torusAnimNode;
+    Lighting lighting{};   // Lighting for the scene
+
 };

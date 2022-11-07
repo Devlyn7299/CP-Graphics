@@ -2,7 +2,7 @@
 #include "ofMain.h"
 #include "Camera.h"
 #include "NewSceneGraph.h"
-//#include "MySceneGraph.h"
+#include "MySceneGraph.h"
 
 class ofApp : public ofBaseApp
 {
@@ -33,6 +33,9 @@ private:
     ofMesh cubeMesh;
     ofMesh cylinderMesh;
     ofMesh sphereMesh;
+
+    // boolean that either allows or disallows mouse movement
+    bool allowMouseMovement{ true };
 
     // Do shaders need to be reloaded?
     bool needsReload { true };
@@ -65,6 +68,6 @@ private:
     // update camera rotation based on mouse movement
     void updateCameraRotation(float dx, float dy);
 
-    array<ofMesh, 5> meshArray[];
+    //array<ofMesh, 5> meshArray[];
 
 };

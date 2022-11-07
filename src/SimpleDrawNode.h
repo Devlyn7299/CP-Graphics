@@ -11,7 +11,7 @@ public:
     // Override the base class's draw function
     void drawNode(const CameraMatrices& camera, const glm::mat4& model) const;
 
-private:
+protected:
     // The mesh to be drawn (reference to the resource's "home")
     const ofMesh& mesh;
 

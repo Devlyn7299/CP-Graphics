@@ -21,6 +21,7 @@ void ofApp::setup()
     // Set up scene graph
     sceneGraph.setup(torusMesh, coneMesh, cubeMesh, cylinderMesh, sphereMesh, shader);
     //sceneGraph.setup(torusMesh, shader);
+    //sceneGraph.lighting.pointLight.position = camera.position;
 }
 
 void ofApp::reloadShaders()
@@ -33,11 +34,11 @@ void ofApp::updateCameraRotation(float dx, float dy)
 {
     using namespace glm;
 
-    cameraPitch -= dy;
+    cameraPitch += dy;
     // -89 to +89 degrees, converted to radians
-    cameraPitch = clamp(cameraPitch, radians(-89.0f), radians(89.0f));
+    //cameraPitch = clamp(cameraPitch, radians(-89.0f), radians(89.0f));
 
-    cameraHead -= dx;
+    cameraHead += dx;
 }
 
 //--------------------------------------------------------------
@@ -51,7 +52,7 @@ void ofApp::update()
     using namespace glm;
 
     // Calculate world space velocity.
-    vec3 velocityWorldSpace { mat3(rotate(cameraHead, vec3(0, 1, 0))) * velocity };
+    vec3 velocityWorldSpace { mat3(rotate(-cameraHead, vec3(0, 1, 0)) * rotate(-cameraPitch, vec3(1, 0, 0))) * velocity };
 
     // Time since last frame
     float dt { static_cast<float>(ofGetLastFrameTime()) };
@@ -60,9 +61,11 @@ void ofApp::update()
     camera.position += velocityWorldSpace * dt;
 
     // Update rotation
-    camera.rotation = rotate(cameraHead, vec3(0, 1, 0)) *
-        rotate(cameraPitch, vec3(1, 0, 0));
+    camera.rotation = rotate(-cameraHead, vec3(0, 1, 0)) *
+        rotate(-cameraPitch, vec3(1, 0, 0));
 
+    //sceneGraph.lighting.pointLight.position = camera.position;
+    //cout << sceneGraph.lighting.pointLight.position << endl;
     // Update scene graph
     sceneGraph.rootNode.updateSceneGraph(dt);
 }
@@ -88,60 +91,72 @@ void ofApp::keyPressed(int key)
 {
     using namespace glm;
 
-    if (key == OF_KEY_UP || key == 'w')
+    if (key == 'w')
     {
-        // Forward motion
         velocity.z = -1;
     }
-    else if (key == OF_KEY_DOWN || key == 's')
+    else if (key == 's')
     {
-        // Backwards motion
         velocity.z = 1;
     }
-    else if (key == OF_KEY_LEFT || key == 'a')
+    else if (key == 'a')
     {
-        // Forward motion
         velocity.x = -1;
     }
-    else if (key == OF_KEY_RIGHT || key == 'd')
+    else if (key == 'd')
     {
-        // Backwards motion
         velocity.x = 1;
+    }
+
+    // Added R and F to go up and down, relative to where the camera is pointing
+    else if (key == 'f')
+    {
+        velocity.y = -1;
+    }
+    else if (key == 'r')
+    {
+        velocity.y = 1;
+    }
+
+    // Allowing the user to disable mouseMovement with E
+    if (key == 'e')
+    {
+        allowMouseMovement = !allowMouseMovement;
+    }
+
+    if (key == '`')
+    {
+        needsReload = true;
     }
 }
 
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key)
 {
-    if (key == '`')
+    if (key == 'w' || key == 's')
     {
-        // Reload shaders
-        needsReload = true;
+        velocity.z = 0;
     }
-    else if (key == OF_KEY_LEFT || key == 'a' || key == OF_KEY_RIGHT || key == 'd')
+    else if (key == 'a' || key == 'd')
     {
-        // Reset velocity when a key is released
         velocity.x = 0;
     }
-    else if (key == OF_KEY_UP || key == 'w' || key == OF_KEY_DOWN || key == 's')
+    else if (key == 'f' || key == 'r')
     {
-        // Reset velocity when a key is released
-        velocity.z = 0;
+        velocity.y = 0;
     }
 }
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y)
 {
-    if (prevX != 0 && prevY != 0)
+    if (allowMouseMovement)
     {
-        // Previous mouse position has been initialized.
-        // Calculate dx and dy
-        int dx = x - prevX;
-        int dy = y - prevY;
-
-        // Update camera rotation based on mouse movement.
-        updateCameraRotation(mouseSensitivity * dx, mouseSensitivity * dy);
+        if (prevX != 0 && prevY != 0)
+        {
+            // Update camera rotation based on mouse movement
+            updateCameraRotation(mouseSensitivity * (x - prevX), mouseSensitivity * (y - prevY));
+        }
     }
 
     // Remember where the mouse was this frame.

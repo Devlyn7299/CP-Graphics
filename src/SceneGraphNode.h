@@ -12,7 +12,7 @@ public:
     void updateSceneGraph(float dt, glm::mat4 globalTransform = {})
     {
         // Apply local transform, then global
-        glm::mat4 model { globalTransform * localTransform };
+        glm::mat4 model{ globalTransform * localTransform };
 
         // Invoke polymorphic update function
         this->updateNode(dt, model);
@@ -28,7 +28,7 @@ public:
     void drawSceneGraph(const CameraMatrices& camera, glm::mat4 globalTransform = {})
     {
         // Apply local transform, then global
-        glm::mat4 model { globalTransform * localTransform };
+        glm::mat4 model{ globalTransform * localTransform };
 
         // Invoke polymorphic draw function
         this->drawNode(camera, model);
@@ -41,10 +41,10 @@ public:
         }
     }
 
-    glm::mat4 localTransform {}; // transformation relative to this node's parent
+    glm::mat4 localTransform{}; // transformation relative to this node's parent
 
     // List of pointers to the child nodes of this node.
-    std::list<std::shared_ptr<SceneGraphNode>> childNodes {};
+    std::list<std::shared_ptr<SceneGraphNode>> childNodes{};
 
 protected:
     virtual void updateNode(float dt, const glm::mat4& model)

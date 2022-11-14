@@ -1,5 +1,5 @@
 #include "ofApp.h"
-#include "CameraMatrices.h"
+#include "buildTerrainMesh.h"
 
 //--------------------------------------------------------------
 void ofApp::setup()
@@ -8,59 +8,94 @@ void ofApp::setup()
 
     ofEnableDepthTest();
 
+    // Enable face culling to test winding order
+    glEnable(GL_CULL_FACE); 
+
     // Load shaders for the first time
     reloadShaders();
 
-    // Load meshes
-    torusMesh.load("models/torus.ply");
-    coneMesh.load("models/cone.ply");
-    cubeMesh.load("models/cube.ply");
-    cylinderMesh.load("models/cylinder.ply");
-    sphereMesh.load("models/sphere.ply");
-    
-    // Set up scene graph
-    sceneGraph.setup(torusMesh, coneMesh, cubeMesh, cylinderMesh, sphereMesh, shader);
+    // Setting the backround color to a sky blue color
+    ofSetBackgroundColor(ofColor(135, 206, 235));   // Sky blue
+
+    // Loading low resolution heightmap
+    heightmap.setUseTexture(false);
+    heightmap.load("textures/TamrielLowRes.png");
+    assert(heightmap.getWidth() != 0 && heightmap.getHeight() != 0);
+
+    // Loading high resolution heightmap
+    heightmapHiRes.setUseTexture(false);
+    heightmapHiRes.load("textures/TamrielHighRes.png");
+    assert(heightmapHiRes.getWidth() != 0 && heightmapHiRes.getHeight() != 0);
+
+
+
+    // Building the terrain mesh for the low resolution heightmap
+    buildTerrainMesh(terrainMesh, heightmap, 0, 0,
+        heightmap.getWidth() - 1, heightmap.getHeight() - 1,
+        glm::vec3(32, 50*32, 32));
+
+    landTex.load("textures/aerial_grass_rock_diff_4k.png");
+    landTex.getTexture().setTextureWrap(GL_REPEAT, GL_REPEAT);
+    landTex.getTexture().generateMipmap(); // create the mipmaps
+    landTex.getTexture().setTextureMinMagFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
+
+
+    // Setting the camera's position in the world
+    glm::vec3 newPosition = glm::vec3(
+        ((heightmap.getWidth() - 1) * 0.5f) * 32,
+        30 * 32,
+        ((heightmap.getHeight() - 1) * 0.5f) * 32
+    );
+    position = newPosition;
+
+    // Building the terrain mesh for the high resolution heightmap (needs camera position)
+    cellManager.initializeForPosition(position);
+
+    // Creating the water mesh
+    water.addVertex(glm::vec3(0, 700, 0));
+    water.addVertex(glm::vec3(0, 700, heightmapHiRes.getHeight() - 1));
+    water.addVertex(glm::vec3(heightmapHiRes.getWidth() - 1, 700, heightmapHiRes.getHeight() - 1));
+    water.addVertex(glm::vec3(heightmapHiRes.getWidth() - 1, 700, 0));
+
+    ofIndexType indices[6] = { 0,1,2,2,3,0 };
+    water.addIndices(indices, 6);
 }
 
 void ofApp::reloadShaders()
 {
-    shader.load("shaders/my.vert", "shaders/my.frag");
+    shader.load("shaders/shader.vert", "shaders/shader.frag");
     needsReload = false;
 }
 
 void ofApp::updateCameraRotation(float dx, float dy)
 {
     using namespace glm;
-
-    cameraPitch += dy;
-
     cameraHead += dx;
+    cameraPitch += dy;
 }
 
 //--------------------------------------------------------------
 void ofApp::update()
 {
+    using namespace glm;
+
     if (needsReload)
     {
         reloadShaders();
     }
 
-    using namespace glm;
+    // calculate world space velocity
+    vec3 velocityWorldSpace{ mat3(rotate(-cameraHead, vec3(0, 1, 0)) * rotate(-cameraPitch, vec3(1, 0, 0))) * velocity};
 
-    // Calculate world space velocity.
-    vec3 velocityWorldSpace { mat3(rotate(-cameraHead, vec3(0, 1, 0)) * rotate(-cameraPitch, vec3(1, 0, 0))) * velocity };
+    // time since last frame
+    float dt{ static_cast<float>(ofGetLastFrameTime()) };
 
-    // Time since last frame
-    float dt { static_cast<float>(ofGetLastFrameTime()) };
+    // update position
+    position += velocityWorldSpace * dt;
 
-    // Update position using velocity and dt.
-    camera.position += velocityWorldSpace * dt;
+    // Update the cellManager to account for camera position changing
+    cellManager.optimizeForPosition(position);
 
-    // Update rotation
-    camera.rotation = rotate(-cameraHead, vec3(0, 1, 0)) * rotate(-cameraPitch, vec3(1, 0, 0));
-
-    // Update scene graph
-    sceneGraph.rootNode.updateSceneGraph(dt);
 }
 
 //--------------------------------------------------------------
@@ -68,47 +103,108 @@ void ofApp::draw()
 {
     using namespace glm;
 
-    float width { static_cast<float>(ofGetViewportWidth()) };
-    float height { static_cast<float>(ofGetViewportHeight()) };
-    float aspect { width / height };
+    ofEnableBlendMode(OF_BLENDMODE_ALPHA);
 
-    // Calculate the view and projection matrices for the camera.
-    CameraMatrices camMatrices { camera, aspect, 0.01f, 10.0f, };
+    // Setting variables for the near, mid, and far planes
+    float nearPlane = 1.0f;
+    float midPlane = 250.0f;
+    float farPlane = 3000.0f;
 
-    // Draw scene graph
-    sceneGraph.rootNode.drawSceneGraph(camMatrices);
+    // Setting variables for the aspect ratio of the window
+    float width{ static_cast<float>(ofGetViewportWidth()) };
+    float height{ static_cast<float>(ofGetViewportHeight()) };
+    float aspect{ width / height };
+
+    // Setting initial model, view, and projection matrices
+    mat4 model{ rotate(radians(0.0f), vec3(1, 1, 1)) * scale(vec3(1,1,1)) };
+    mat4 view{ (rotate(cameraPitch, vec3(1, 0, 0)) * rotate(cameraHead, vec3(0, 1, 0))) * translate(-position) };
+    // First projection matrix is set for the low resolution texture (mid plane to far plane)
+    mat4 proj{ perspective(radians(90.0f), aspect, midPlane - 249.0f, farPlane) };
+
+    // Setting initial mvp and modelView matrices
+    mat4 mvp{ proj * view * model };
+    mat4 modelView{ view * model };
+
+    shader.begin(); // start using the shader
+
+    // Setting uniform variables for the vertex shader
+    shader.setUniformMatrix4f("mvp", mvp);
+    shader.setUniformMatrix4f("modelView", modelView);
+    shader.setUniformMatrix3f("normalMatrix", mat3(model));
+
+    // Setting uniform variables for smoothstep use in the fragment shader
+    shader.setUniform1f("nearPlane", 0);
+    shader.setUniform1f("midPlane", 0);
+    shader.setUniform1f("needsSmoothstep", 0);
+
+    // Setting uniform variables for lighting use in the fragment shader
+    shader.setUniform3f("meshColor", vec3(86.0f/255.0f, 125.0f/255.0f, 70.0f/255.0f));  // Grass green
+    shader.setUniform3f("lightColor", vec3(0.5));
+    shader.setUniform3f("lightDir", normalize(vec3(-1, 1, 1)));
+    shader.setUniform3f("ambientColor", vec3(0.1, 0.2, 0.1));
+    shader.setUniformTexture("tex", landTex, 0);
+    // Drawing the low resolution terrain mesh and mid-to-far plane water
+    terrainMesh.draw();
+    shader.setUniform3f("meshColor", vec3(11.0f / 255.0f, 199.0f / 255.0f, 250.0f / 255.0f));   // Water
+    water.draw();
+    
+    // Clearing depth buffer
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    // Setting new projection for near-to-mid plane
+    proj = { perspective(radians(90.0f), aspect, nearPlane, midPlane + 500.0f) };
+    mvp = { proj * view * model };
+
+    shader.setUniformMatrix4f("mvp", mvp);
+
+    // Updating uniform variables for smoothstep use in the fragment shader
+    shader.setUniform1f("nearPlane", nearPlane);
+    shader.setUniform1f("midPlane", midPlane + 500.0f);
+    shader.setUniform1f("needsSmoothstep", 1);
+
+    // Drawing the near-to-mid plane water and high resolution terrain mesh
+    water.draw();
+    shader.setUniform3f("meshColor", vec3(86.0f / 255.0f, 125.0f / 255.0f, 70.0f / 255.0f));    // Grass green
+    cellManager.drawActiveCells(position, midPlane + 250.0f);
+
+    shader.end(); // done with the shader
+    ofDisableBlendMode();
+
+}
+
+void ofApp::exit()
+{
+    cellManager.stop();
 }
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key)
 {
-    using namespace glm;
-
     if (key == 'w')
     {
-        velocity.z = -1;
+        velocity.z = -50;
     }
     else if (key == 's')
     {
-        velocity.z = 1;
+        velocity.z = 50;
     }
     else if (key == 'a')
     {
-        velocity.x = -1;
+        velocity.x = -50;
     }
     else if (key == 'd')
     {
-        velocity.x = 1;
+        velocity.x = 50;
     }
 
     // Added R and F to go up and down, relative to where the camera is pointing
     else if (key == 'f')
     {
-        velocity.y = -1;
+        velocity.y = -50;
     }
     else if (key == 'r')
     {
-        velocity.y = 1;
+        velocity.y = 50;
     }
 
     // Allowing the user to disable mouseMovement with E

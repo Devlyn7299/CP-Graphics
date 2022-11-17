@@ -10,15 +10,18 @@ uniform vec3 lightColor;
 uniform vec3 meshColor;
 
 out vec2 fragUV;
+out vec3 fragWorldPos;
 out mat3 TBN;
 
 uniform mat4 mvp; 
+uniform mat4 model;
 uniform mat3 normalMatrix;
 
 
 void main()
 {
     gl_Position = mvp * vec4(position, 1.0);
+    fragWorldPos = (model * vec4(position, 1.0)).xyz;
     fragUV = vec2(uv.x, 1 - uv.y);
 
     vec3 T = normalize(normalMatrix * tangent.xyz);

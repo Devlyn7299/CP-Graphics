@@ -46,6 +46,9 @@ class ofApp : public ofBaseApp{
 		// Shader for a spot light
 		ofShader spotLightShader;
 
+		// Shader for multiple light sources
+		ofShader allLightShader;
+
 		// Shader for this example
 		ofShader shader;
 

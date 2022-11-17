@@ -59,6 +59,7 @@ void ofApp::reloadShaders()
 		spotLightShader.load("shaders/my.vert", "shaders/spotLight.frag");
 		skyboxShader.load("shaders/skybox.vert", "shaders/skybox.frag");
 		//shader.load("shaders/my.vert", "shaders/my.frag");
+		allLightShader.load("shaders/my.vert", "shaders/allLights.frag");
 		needsReload = false;
 	}
 }
@@ -90,7 +91,6 @@ void ofApp::update(){
 	// Setting velocity world space and adding it to the camera position every update
 	//glm::vec3 velocityWorldSpace{ glm::mat3((rotate(-cameraHead, glm::vec3(0, 1, 0)) * rotate(-cameraPitch, glm::vec3(1, 0, 0)))) * velocity };
 	//camera.position += velocityWorldSpace * dt;
-
 }
 
 void drawMesh(const CameraMatrices& camMatrices,
@@ -103,8 +103,8 @@ void drawMesh(const CameraMatrices& camMatrices,
 
 	// assumes shader is already active
 	shader.setUniform3f("cameraPosition", camMatrices.getCamera().position);
-	shader.setUniform3f("lightDir", light.direction);
-	shader.setUniform3f("lightColor", light.color * light.intensity);
+	shader.setUniform3f("dirLightDir", light.direction);
+	shader.setUniform3f("dirLightColor", light.color * light.intensity);
 	shader.setUniform3f("ambientColor", ambientLight);
 	shader.setUniformMatrix4f("mvp",
 		camMatrices.getProj() * camMatrices.getView() * modelMatrix);
@@ -167,6 +167,37 @@ void drawMesh(const CameraMatrices& camMatrices,
 	mesh.draw();
 }
 
+void drawMesh(const CameraMatrices& camMatrices,
+	const SpotLight& spotLight,
+	const DirectionalLight& dirLight,
+	const glm::vec3 ambientLight,
+	ofShader& shader, ofMesh& mesh,
+	glm::mat4 modelMatrix = glm::mat4{})
+{
+	using namespace glm;
+
+	// Assumes shader is already active
+
+	// Spot light
+	shader.setUniform3f("spotLightPos", spotLight.position);
+	shader.setUniform3f("spotLightConeDir", spotLight.direction);
+	shader.setUniform1f("spotLightCutoff", spotLight.cutoff);
+	shader.setUniform3f("spotLightColor", spotLight.color * spotLight.intensity);
+
+
+
+	shader.setUniform3f("cameraPosition", camMatrices.getCamera().position);
+	shader.setUniform3f("dirLightDir", dirLight.direction);
+	shader.setUniform3f("dirLightColor", dirLight.color * dirLight.intensity);
+	shader.setUniform3f("ambientColor", ambientLight);
+	shader.setUniformMatrix4f("mvp",
+		camMatrices.getProj() * camMatrices.getView() * modelMatrix);
+	shader.setUniformMatrix3f("normalMatrix",
+		inverse(transpose(mat3(modelMatrix))));
+	shader.setUniformMatrix4f("model", modelMatrix);
+	mesh.draw();
+}
+
 void ofApp::drawCube(const CameraMatrices& camMatrices)
 {
 	using namespace glm;
@@ -196,7 +227,7 @@ void ofApp::draw(){
 	DirectionalLight dirLight{};
 	dirLight.direction = normalize(vec3(1, 1, 1));
 	dirLight.color = vec3(1, 1, 1); // white light
-	dirLight.intensity = 3;
+	dirLight.intensity = 1;
 
 	// Define the point light
 	PointLight pointLight{};
@@ -206,23 +237,23 @@ void ofApp::draw(){
 
 	// Define the spot light
 	SpotLight spotLight{};
-	spotLight.position = vec3(-0.3, 0, 0);
-	spotLight.direction = vec3(0, 0, 1);
+	spotLight.position = vec3(3, 0, 0);
+	spotLight.direction = vec3(-1, 0, 0);
 	spotLight.cutoff = cos(radians(15.0f /* degrees */));
-	spotLight.color = vec3(1, 1, 1); // white light
-	spotLight.intensity = 1;
+	spotLight.color = vec3(1, 0.1, 0.1); // red light
+	spotLight.intensity = 3;
 
-	directionalLightShader.begin();
+	allLightShader.begin();
 
 	// Set up the textures in advance
-	directionalLightShader.setUniformTexture("diffuseTex", swordDiffuse, 0);
-	directionalLightShader.setUniformTexture("normalTex", swordNormal, 1);
-	directionalLightShader.setUniformTexture("envMap", cubemap.getTexture(), 2);
-	drawMesh(camMatrices, dirLight, vec3(0.0),
-		directionalLightShader, swordMesh, translate(vec3(swordPosition)));
+	allLightShader.setUniformTexture("diffuseTex", swordDiffuse, 0);
+	allLightShader.setUniformTexture("normalTex", swordNormal, 1);
+	allLightShader.setUniformTexture("envMap", cubemap.getTexture(), 2);
+	drawMesh(camMatrices, spotLight, dirLight, vec3(0.0),
+		allLightShader, swordMesh, translate(vec3(swordPosition)));
 
 	drawCube(camMatrices);
-	directionalLightShader.end();
+	allLightShader.end();
 	
 
 

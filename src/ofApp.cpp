@@ -29,6 +29,7 @@ void ofApp::setup(){
 	// Load sword textures
 	swordDiffuse.load("textures/sword_color.png");
 	swordNormal.load("textures/sword_normal.png");
+	swordMetal.load("textures/sword_metallic.png");
 
 	// Load skybox mesh
 	cubeMesh.load("models/cube.ply");
@@ -103,8 +104,8 @@ void drawMesh(const CameraMatrices& camMatrices,
 
 	// assumes shader is already active
 	shader.setUniform3f("cameraPosition", camMatrices.getCamera().position);
-	shader.setUniform3f("dirLightDir", light.direction);
-	shader.setUniform3f("dirLightColor", light.color * light.intensity);
+	shader.setUniform3f("lightDir", light.direction);
+	shader.setUniform3f("lightColor", light.color * light.intensity);
 	shader.setUniform3f("ambientColor", ambientLight);
 	shader.setUniformMatrix4f("mvp",
 		camMatrices.getProj() * camMatrices.getView() * modelMatrix);
@@ -227,7 +228,7 @@ void ofApp::draw(){
 	DirectionalLight dirLight{};
 	dirLight.direction = normalize(vec3(1, 1, 1));
 	dirLight.color = vec3(1, 1, 1); // white light
-	dirLight.intensity = 1;
+	dirLight.intensity = 3;
 
 	// Define the point light
 	PointLight pointLight{};
@@ -248,7 +249,9 @@ void ofApp::draw(){
 	// Set up the textures in advance
 	allLightShader.setUniformTexture("diffuseTex", swordDiffuse, 0);
 	allLightShader.setUniformTexture("normalTex", swordNormal, 1);
-	allLightShader.setUniformTexture("envMap", cubemap.getTexture(), 2);
+	allLightShader.setUniformTexture("specularTex", swordMetal, 2);
+	allLightShader.setUniformTexture("envMap", cubemap.getTexture(), 3);
+	allLightShader.setUniform1f("shininess", 64.0);
 	drawMesh(camMatrices, spotLight, dirLight, vec3(0.0),
 		allLightShader, swordMesh, translate(vec3(swordPosition)));
 

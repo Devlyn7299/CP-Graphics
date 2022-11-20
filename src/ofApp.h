@@ -70,6 +70,9 @@ class ofApp : public ofBaseApp{
 		// Normal map for sword
 		ofImage swordNormal;
 
+		// Metal texture for sword
+		ofImage swordMetal;
+
 		// Mesh for the skybox
 		ofMesh cubeMesh;
 

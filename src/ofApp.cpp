@@ -55,11 +55,7 @@ void ofApp::setup(){
 void ofApp::reloadShaders()
 {
 	if (needsReload) {
-		directionalLightShader.load("shaders/my.vert", "shaders/directionalLight.frag");
-		pointLightShader.load("shaders/my.vert", "shaders/pointLight.frag");
-		spotLightShader.load("shaders/my.vert", "shaders/spotLight.frag");
 		skyboxShader.load("shaders/skybox.vert", "shaders/skybox.frag");
-		//shader.load("shaders/my.vert", "shaders/my.frag");
 		allLightShader.load("shaders/my.vert", "shaders/allLights.frag");
 		needsReload = false;
 	}
@@ -89,88 +85,12 @@ void ofApp::update(){
 	using namespace glm;
 	camera.position += mat3(rotate(cameraHead, vec3(0, 1, 0))) * velocity * dt;
 	camera.rotation = rotate(cameraHead, vec3(0, 1, 0)) * rotate(cameraPitch, vec3(1, 0, 0));
-	// Setting velocity world space and adding it to the camera position every update
-	//glm::vec3 velocityWorldSpace{ glm::mat3((rotate(-cameraHead, glm::vec3(0, 1, 0)) * rotate(-cameraPitch, glm::vec3(1, 0, 0)))) * velocity };
-	//camera.position += velocityWorldSpace * dt;
-}
-
-void drawMesh(const CameraMatrices& camMatrices,
-	const DirectionalLight& light,
-	const glm::vec3 ambientLight,
-	ofShader& shader, ofMesh& mesh,
-	glm::mat4 modelMatrix = glm::mat4{})
-{
-	using namespace glm;
-
-	// assumes shader is already active
-	shader.setUniform3f("cameraPosition", camMatrices.getCamera().position);
-	shader.setUniform3f("lightDir", light.direction);
-	shader.setUniform3f("lightColor", light.color * light.intensity);
-	shader.setUniform3f("ambientColor", ambientLight);
-	shader.setUniformMatrix4f("mvp",
-		camMatrices.getProj() * camMatrices.getView() * modelMatrix);
-	shader.setUniformMatrix3f("normalMatrix",
-		inverse(transpose(mat3(modelMatrix))));
-	shader.setUniformMatrix4f("model", modelMatrix);
-	mesh.draw();
-}
-
-void drawMesh(const CameraMatrices& camMatrices,
-	const PointLight& light,
-	const glm::vec3 ambientLight,
-	ofShader& shader, ofMesh& mesh,
-	glm::mat4 modelMatrix = glm::mat4{})
-{
-	using namespace glm;
-
-	// assumes shader is already active
-	shader.setUniform3f("lightPosition", light.position);
-	shader.setUniform3f("lightColor", light.color * light.intensity);
-	shader.setUniform3f("ambientColor", ambientLight);
-	shader.setUniformMatrix4f("mvp",
-		camMatrices.getProj() * camMatrices.getView() * modelMatrix);
-	shader.setUniformMatrix4f("model", modelMatrix);
-	shader.setUniformMatrix3f("normalMatrix",
-		inverse(transpose(mat3(modelMatrix))));
-	mesh.draw();
-}
-
-void drawMesh(const CameraMatrices& camMatrices,
-	const SpotLight& light,
-	const glm::vec3 ambientLight,
-	ofShader& shader, ofMesh& mesh,
-	glm::mat4 modelMatrix = glm::mat4{})
-{
-	using namespace glm;
-
-	// Assumes shader is already active
-	shader.setUniform3f("lightPosition", light.position);
-	shader.setUniform3f("lightConeDirection", light.direction);
-	shader.setUniform1f("lightCutoff", light.cutoff);
-	shader.setUniform3f("lightColor", light.color * light.intensity);
-	shader.setUniform3f("ambientColor", ambientLight);
-	shader.setUniformMatrix4f("mvp",
-		camMatrices.getProj() * camMatrices.getView() * modelMatrix);
-	shader.setUniformMatrix4f("model", modelMatrix);
-	shader.setUniformMatrix3f("normalmatrix",
-		inverse(transpose(mat3(modelMatrix))));
-
-
-	//shader.setUniform3f("lightDir", normalize(vec3(1, 1, 1)));
-	//shader.setUniform3f("lightColor", vec3(1, 1, 1)); // white light
-	//shader.setUniform3f("meshColor", vec3(1, 0, 0)); // red material
-	//shader.setUniform3f("ambientColor", vec3(0.1, 0.1, 0.1));
-	//shader.setUniformMatrix4f("mvp", camMatrices.getProj() * camMatrices.getView());
-	//shader.setUniformMatrix3f("normalMatrix", mat3()); // identity for model / normal matrix
-	//shader.setUniformTexture("diffuseTex", swordDiffuse, 0);
-	//shader.setUniformTexture("normalTex", swordNormal, 1); // IMPORTANT: Use a different slot 
-
-	mesh.draw();
 }
 
 void drawMesh(const CameraMatrices& camMatrices,
 	const SpotLight& spotLight,
 	const DirectionalLight& dirLight,
+	const PointLight& pointLight,
 	const glm::vec3 ambientLight,
 	ofShader& shader, ofMesh& mesh,
 	glm::mat4 modelMatrix = glm::mat4{})
@@ -185,11 +105,15 @@ void drawMesh(const CameraMatrices& camMatrices,
 	shader.setUniform1f("spotLightCutoff", spotLight.cutoff);
 	shader.setUniform3f("spotLightColor", spotLight.color * spotLight.intensity);
 
+	// Point light
+	shader.setUniform3f("pointLightPosition", (pointLight.position));
+	shader.setUniform3f("pointLightColor", pointLight.color * pointLight.intensity);
 
+	// Directional light
+	shader.setUniform3f("dirLightDir", normalize(dirLight.direction));
+	shader.setUniform3f("dirLightColor", dirLight.color * dirLight.intensity);
 
 	shader.setUniform3f("cameraPosition", camMatrices.getCamera().position);
-	shader.setUniform3f("dirLightDir", dirLight.direction);
-	shader.setUniform3f("dirLightColor", dirLight.color * dirLight.intensity);
 	shader.setUniform3f("ambientColor", ambientLight);
 	shader.setUniformMatrix4f("mvp",
 		camMatrices.getProj() * camMatrices.getView() * modelMatrix);
@@ -228,21 +152,21 @@ void ofApp::draw(){
 	DirectionalLight dirLight{};
 	dirLight.direction = normalize(vec3(1, 1, 1));
 	dirLight.color = vec3(1, 1, 1); // white light
-	dirLight.intensity = 3;
+	dirLight.intensity = 1;
 
 	// Define the point light
 	PointLight pointLight{};
-	pointLight.position = vec3(0, 0, 1.5);
-	pointLight.color = vec3(1, 1, 1); // white light
+	pointLight.position = vec3(1.15, 0, 0.5);
+	pointLight.color = vec3(0.1, 1, 0.1); // green light
 	pointLight.intensity = 1;
 
 	// Define the spot light
 	SpotLight spotLight{};
-	spotLight.position = vec3(3, 0, 0);
-	spotLight.direction = vec3(-1, 0, 0);
+	spotLight.position = vec3(-0.75, 0, 0);
+	spotLight.direction = vec3(1, 0, 0);
 	spotLight.cutoff = cos(radians(15.0f /* degrees */));
 	spotLight.color = vec3(1, 0.1, 0.1); // red light
-	spotLight.intensity = 3;
+	spotLight.intensity = 1;
 
 	allLightShader.begin();
 
@@ -252,28 +176,11 @@ void ofApp::draw(){
 	allLightShader.setUniformTexture("specularTex", swordMetal, 2);
 	allLightShader.setUniformTexture("envMap", cubemap.getTexture(), 3);
 	allLightShader.setUniform1f("shininess", 64.0);
-	drawMesh(camMatrices, spotLight, dirLight, vec3(0.0),
+	drawMesh(camMatrices, spotLight, dirLight, pointLight, vec3(0.0),
 		allLightShader, swordMesh, translate(vec3(swordPosition)));
 
 	drawCube(camMatrices);
 	allLightShader.end();
-	
-
-
-	//shader.begin(); // make shader active jut to set uniform variables
-	//shader.setUniform3f("lightDir", normalize(vec3(1, 1, 1)));
-	//shader.setUniform3f("lightColor", vec3(1, 1, 1)); // white light
-	//shader.setUniform3f("meshColor", vec3(1, 0, 0)); // red material
-	//shader.setUniform3f("ambientColor", vec3(0.1, 0.1, 0.1));
-	//shader.setUniformMatrix4f("mvp", camMatrices.getProj() * camMatrices.getView());
-	//shader.setUniformMatrix3f("normalMatrix", mat3()); // identity for model / normal matrix
-	//shader.setUniformTexture("diffuseTex", swordDiffuse, 0);
-	//shader.setUniformTexture("normalTex", swordNormal, 1); // IMPORTANT: Use a different slot 
-
-	//swordMesh.draw();
-	//drawCube(camMatrices);
-
-	//shader.end();
 }
 
 //--------------------------------------------------------------

@@ -37,35 +37,14 @@ class ofApp : public ofBaseApp{
 		CameraData cam;
 		bool allowMouseMovement{ true };
 
-		// Shader for a directional light
-		ofShader directionalLightShader;
-
-		// Shader for a directional light
-		ofShader pointLightShader;
-
-		// Shader for a spot light
-		ofShader spotLightShader;
-
 		// Shader for multiple light sources
 		ofShader allLightShader;
-
-		// Shader for this example
-		ofShader shader;
-
-		// Mesh of a shield
-		ofMesh shieldMesh;
 
 		// Mesh of a sword
 		ofMesh swordMesh;
 
-		// Diffuse (color) texture
-		ofImage shieldDiffuse;
-
 		// Diffuse (color) texture for sword
 		ofImage swordDiffuse;
-
-		//  Normal map
-		ofImage shieldNormal;
 
 		// Normal map for sword
 		ofImage swordNormal;

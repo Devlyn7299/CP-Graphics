@@ -1,286 +1,126 @@
 #include "ofApp.h"
-#include "buildTerrainMesh.h"
+#include "CameraMatrices.h"
+#include "calcTangents.h"
+#include "DirectionalLight.h"
+#include "PointLight.h"
+#include "SpotLight.h"
 
-void buildCube(ofMesh& mesh)
+void buildPlaneMesh(float width, float depth, float height, ofMesh& planeMesh)
 {
     using namespace glm;
 
-    // Generate the cube mesh
-    mesh.addVertex(vec3(-1, -1, -1)); // front left bottom
-    mesh.addVertex(vec3(-1, -1, 1)); // back  left bottom
-    mesh.addVertex(vec3(-1, 1, -1)); // front left top
-    mesh.addVertex(vec3(-1, 1, 1));  // back  left top
-    mesh.addVertex(vec3(1, -1, -1)); // front right bottom
-    mesh.addVertex(vec3(1, -1, 1));  // back  right bottom
-    mesh.addVertex(vec3(1, 1, -1));  // front right top
-    mesh.addVertex(vec3(1, 1, 1));   // back  right top
+    // Northwest corner
+    planeMesh.addVertex(vec3(-width, height, -depth));
+    planeMesh.addTexCoord(vec2(0, 0));
+    planeMesh.addNormal(vec3(0, 1, 0));
 
-    ofIndexType indices[36] =
-    {
-        2, 3, 6, 7, 6, 3, // top
-        0, 4, 1, 1, 4, 5, // bottom
-        0, 1, 2, 2, 1, 3, // left
-        4, 6, 5, 5, 6, 7, // right
-        0, 2, 4, 4, 2, 6, // front
-        1, 5, 3, 3, 5, 7, // back
-    };
+    // Northeast corner
+    planeMesh.addVertex(vec3(-width, height, depth));
+    planeMesh.addTexCoord(vec2(1, 0));
+    planeMesh.addNormal(vec3(0, 1, 0));
 
-    mesh.addIndices(indices, 36);
+    // Southwest corner
+    planeMesh.addVertex(vec3(width, height, -depth));
+    planeMesh.addTexCoord(vec2(0, 1));
+    planeMesh.addNormal(vec3(0, 1, 0));
 
-    mesh.flatNormals();
+    // Southeast corner
+    planeMesh.addVertex(vec3(width, height, depth));
+    planeMesh.addTexCoord(vec2(1, 1));
+    planeMesh.addNormal(vec3(0, 1, 0));
 
-    for (size_t i{ 0 }; i < mesh.getNumNormals(); i++)
-    {
-        mesh.setNormal(i, -mesh.getNormal(i));
-    }
-}
+    // NW - NE - SW triangle
+    planeMesh.addIndex(0);
+    planeMesh.addIndex(1);
+    planeMesh.addIndex(2);
 
-void buildCircle(ofMesh& mesh, int subdiv)
-{
-    using namespace glm;
-
-    // Populate with vertex positions.
-
-    // Center
-    mesh.addVertex(vec3(0));
-
-    // Outer ring
-    for (int i{ 0 }; i < subdiv; i++)
-    {
-        double theta{ i * (2 * PI) / subdiv };
-        mesh.addVertex(vec3(cos(theta), sin(theta), 0));
-    }
-
-    for (int i{ 0 }; i < subdiv; i++)
-    {
-        mesh.addIndex(0);
-        mesh.addIndex(1 /* outer ring start */ + i);
-        mesh.addIndex(1 /* outer ring start */ + (i + 1) % subdiv);
-    }
-
-    mesh.flatNormals();
-
-    for (size_t i{ 0 }; i < mesh.getNumNormals(); i++)
-    {
-        mesh.setNormal(i, -mesh.getNormal(i));
-    }
-}
-
-void buildCylinder(ofMesh& mesh, int subdiv)
-{
-    using namespace glm;
-
-    // Populate with vertex positions.
-
-    // Top center
-    mesh.addVertex(vec3(0, 1, 0)); // vertex 0
-
-    // Top outer ring -- vertices 1 through subdiv
-    for (int i{ 0 }; i < subdiv; i++)
-    {
-        double theta{ i * (2 * PI) / subdiv };
-        mesh.addVertex(vec3(cos(theta), 1, -sin(theta)));
-    }
-
-    // Bottom center
-    mesh.addVertex(vec3(0, -1, 0)); // vertex subdiv + 1
-
-    // Bottom outer ring -- vertices subdiv + 2 through 2 * subdiv + 1
-    for (int i{ 0 }; i < subdiv; i++)
-    {
-        double theta{ i * (2 * PI) / subdiv };
-        mesh.addVertex(vec3(cos(theta), -1, -sin(theta)));
-    }
-
-    // Start of index buffer: populate to form faces
-
-    // Top circle
-    int topRingStart{ 1 };
-    for (int i{ 0 }; i < subdiv; i++)
-    {
-        mesh.addIndex(0); // top center
-        mesh.addIndex(topRingStart + i);
-        mesh.addIndex(topRingStart + (i + 1) % subdiv);
-    }
-
-    // Bottom circle
-    int bottomRingStart{ subdiv + 2 };
-    for (int i{ 0 }; i < subdiv; i++)
-    {
-        mesh.addIndex(subdiv + 1); // bottom center
-
-        // Swap order from top circle so that the circle faces downwards instead of upwards.
-        mesh.addIndex(bottomRingStart + (i + 1) % subdiv);
-        mesh.addIndex(bottomRingStart + i);
-    }
-
-    // Sides
-    for (int i{ 0 }; i < subdiv; i++)
-    {
-        // Define the indices of a single quad
-        int indices[4]
-        {
-            topRingStart + i,
-            topRingStart + (i + 1) % subdiv,
-            bottomRingStart + i,
-            bottomRingStart + (i + 1) % subdiv
-        };
-
-        // build the quad
-        mesh.addIndex(indices[0]);
-        mesh.addIndex(indices[2]);
-        mesh.addIndex(indices[1]);
-        mesh.addIndex(indices[1]);
-        mesh.addIndex(indices[2]);
-        mesh.addIndex(indices[3]);
-    }
-
-    mesh.flatNormals();
-
-    for (size_t i{ 0 }; i < mesh.getNumNormals(); i++)
-    {
-        mesh.setNormal(i, -mesh.getNormal(i));
-    }
-}
-
-void buildSphere(ofMesh& mesh, int subdivTheta, int subdivPhi)
-{
-    using namespace glm;
-
-    // Populate with vertex positions.
-
-    // Top center (north pole)
-    mesh.addVertex(vec3(0, 1, 0)); // vertex 0
-
-    // Rings
-    // Start at i = 1 since i=0 is the north pole
-    for (int i{ 1 }; i < subdivTheta; i++)
-    {
-        double theta{ i * PI / subdivTheta };
-
-        for (int j{ 0 }; j < subdivPhi; j++)
-        {
-            double phi{ j * (2 * PI) / subdivPhi };
-
-            mesh.addVertex(vec3(sin(theta) * cos(phi), cos(theta), -sin(theta) * sin(phi)));
-        }
-    }
-
-    // Bottom center (south pole)
-    mesh.addVertex(vec3(0, -1, 0)); // vertex ???
-
-
-    // Start of index buffer: populate to form faces
-
-    // Top circle (around north pole)
-    for (int i{ 0 }; i < subdivPhi; i++)
-    {
-        int topRingStart{ 1 };
-
-        mesh.addIndex(0); // top center / north pole
-        mesh.addIndex(topRingStart + i);
-        mesh.addIndex(topRingStart + (i + 1) % subdivPhi);
-    }
-
-    int southPole{ (subdivTheta - 1) * subdivPhi + 1 };
-
-    // Bottom circle (around south pole)
-    for (int i{ 0 }; i < subdivPhi; i++)
-    {
-        int bottomRingStart{ southPole - subdivPhi };
-
-        mesh.addIndex(southPole); // bottom center / south pole
-
-        // Swap order from top circle so that the circle faces downwards instead of upwards.
-        mesh.addIndex(bottomRingStart + (i + 1) % subdivPhi);
-        mesh.addIndex(bottomRingStart + i);
-    }
-
-    // Sides
-    for (int i{ 0 }; i < subdivTheta - 2; i++)
-    {
-        for (int j{ 0 }; j < subdivPhi; j++)
-        {
-            int topRingStart{ 1 + subdivPhi * i };
-            int bottomRingStart{ 1 + subdivPhi * (i + 1) };
-
-            // Define the indices of a single quad
-            int indices[4]
-            {
-                topRingStart + j,
-                topRingStart + (j + 1) % subdivPhi,
-                bottomRingStart + j,
-                bottomRingStart + (j + 1) % subdivPhi
-            };
-
-            // build the quad
-            mesh.addIndex(indices[0]);
-            mesh.addIndex(indices[2]);
-            mesh.addIndex(indices[1]);
-            mesh.addIndex(indices[1]);
-            mesh.addIndex(indices[2]);
-            mesh.addIndex(indices[3]);
-        }
-    }
-
-    mesh.flatNormals();
-
-    for (size_t i{ 0 }; i < mesh.getNumNormals(); i++)
-    {
-        mesh.setNormal(i, -mesh.getNormal(i));
-    }
+    // SW - NE - SE triangle
+    planeMesh.addIndex(2);
+    planeMesh.addIndex(1);
+    planeMesh.addIndex(3);
 }
 
 //--------------------------------------------------------------
 void ofApp::setup()
 {
+    using namespace glm;
+
     ofDisableArbTex(); // IMPORTANT!
 
-    //ofEnableDepthTest();
+    // Enable interpolation across sides of the cubemap
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
-    glEnable(GL_CULL_FACE); // Enable face culling to test winding order
+    // Disable Windows cursor
+    auto window { ofGetCurrentWindow() };
+    //glfwSetInputMode(dynamic_pointer_cast<ofAppGLFWWindow>(window)
+    //    ->getGLFWWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    ofEnableDepthTest();
 
     // Load shaders for the first time
     reloadShaders();
 
-    // Load torus mesh
-    torusMesh.load("torus.ply");
+    // Load shield mesh
+    shieldMesh.load("models/shield.ply");
+    swordMesh.load("models/sword.ply");
+    staffMesh.load("models/Staff.ply");
+    //cupMesh.load("models/NewTest.ply");
+    calcTangents(shieldMesh);
+    calcTangents(swordMesh);
+    calcTangents(staffMesh);
+    //calcTangents(cupMesh);
 
-    ofShortImage heightmap{};
-    heightmap.setUseTexture(false);
-    // 641 x 513
-    heightmap.load("TamrielLowRes.png");
-    assert(heightmap.getWidth() != 0 && heightmap.getHeight() != 0);
-    //cout << heightmap.getColor(320, 200) << endl;
+    // Load shield textures
+    shieldDiffuse.load("textures/shield_diffuse.png");
+    shieldNormal.load("textures/shield_normal.png");
+    shieldSpecular.load("textures/shield_spec.png");
 
-    // Build terrain mesh
-    buildTerrainMesh( terrainMesh, heightmap, 0, 0,
-    heightmap.getWidth() - 1, heightmap.getHeight() - 1,
-    glm::vec3(1, 50, 1));
-    
-    // Generate cube mesh
-    buildCube(cubeMesh);
+    swordDiffuse.load("textures/sword_color.png");
+    swordNormal.load("textures/sword_normal.png");
 
-    // Generate circle mesh
-    buildCircle(circleMesh, 40);
+    // Load skybox mesh
+    cubeMesh.load("models/cube.ply");
 
-    // Generate cylinder mesh
-    buildCylinder(cylinderMesh, 8);
+    // Load cubemap images
+    cubemap.load("textures/cube_front.jpg", "textures/cube_back.jpg",
+        "textures/cube_right.jpg", "textures/cube_left.jpg",
+        "textures/cube_top.jpg", "textures/cube_bottom.jpg");
 
-    buildSphere(sphereMesh, 4, 8);
+    // Generate mipmap for irradiance calculation
+    cubemap.getTexture().generateMipmap();
+
+    // building plane mesh for FBO stuff
+    buildPlaneMesh(10.0, 10.0, 0.0, planeMesh);
+
+    // Allocate a 1024x1024 RGB+alpha framebuffer
+    ofFboSettings fboSettings {};
+    fboSettings.width = 1024;
+    fboSettings.height = 1024;
+    fboSettings.internalformat = GL_RGBA;
+    fboSettings.useDepth = true;
+    fboSettings.depthStencilAsTexture = true;
+    fbo.allocate(fboSettings);
 }
 
 void ofApp::reloadShaders()
 {
-    shader.load("shader.vert", "shader.frag");
+    directionalLightShader.load("shaders/my.vert", "shaders/directionalLight.frag");
+    pointLightShader.load("shaders/my.vert", "shaders/pointLight.frag");
+    spotLightShader.load("shaders/my.vert", "shaders/spotLight.frag");
+    planeShader.load("shaders/my.vert", "shaders/shadow.frag");
+    skyboxShader.load("shaders/skybox.vert", "shaders/skybox.frag");
     needsReload = false;
 }
 
 void ofApp::updateCameraRotation(float dx, float dy)
 {
     using namespace glm;
-    cameraHead += dx;
-    cameraPitch += dy;
+
+    cameraPitch -= dy;
+    // -89 to +89 degrees, converted to radians
+    cameraPitch = clamp(cameraPitch, radians(-89.0f), radians(89.0f));
+
+    cameraHead -= dx;
 }
 
 //--------------------------------------------------------------
@@ -291,18 +131,154 @@ void ofApp::update()
         reloadShaders();
     }
 
+    float dt { static_cast<float>(ofGetLastFrameTime()) };
+
+    // Update position using velocity and dt.
+    using namespace glm;
+    camera.position += mat3(rotate(cameraHead, vec3(0, 1, 0)))
+        * velocity * dt;
+    camera.rotation = rotate(cameraHead, vec3(0, 1, 0)) *
+        rotate(cameraPitch, vec3(1, 0, 0));
+
+    time += dt;
+    shieldPosition = vec3(sin(time), 1, 0);
+}
+
+void drawMesh(const CameraMatrices& camMatrices, 
+    const DirectionalLight& light,
+    const glm::vec3 ambientLight,
+    ofShader& shader, ofMesh& mesh, 
+    glm::mat4 modelMatrix = glm::mat4 {})
+{
     using namespace glm;
 
-    // calculate world space velocity
-    vec3 velocityWorldSpace{ mat3(rotate(-cameraHead, vec3(0, 1, 0)) * rotate(-cameraPitch, vec3(1, 0, 0))) * velocity};
+    // assumes shader is already active
+    shader.setUniform3f("cameraPosition", camMatrices.getCamera().position);
+    shader.setUniform3f("lightDir", light.direction);
+    shader.setUniform3f("lightColor", light.color * light.intensity);
+    shader.setUniform3f("ambientColor", ambientLight);
+    shader.setUniformMatrix4f("mvp", 
+        camMatrices.getProj() * camMatrices.getView() * modelMatrix);
+    shader.setUniformMatrix3f("normalMatrix", 
+        inverse(transpose(mat3(modelMatrix))));
+    shader.setUniformMatrix4f("model", modelMatrix);
+    mesh.draw();
+}
 
-    // time since last frame
-    float dt{ static_cast<float>(ofGetLastFrameTime()) };
+void drawMesh(const CameraMatrices& camMatrices,
+    const PointLight& light,
+    const glm::vec3 ambientLight,
+    ofShader& shader, ofMesh& mesh,
+    glm::mat4 modelMatrix = glm::mat4 {})
+{
+    using namespace glm;
 
-    // update position
-    position += velocityWorldSpace * dt;
+    // assumes shader is already active
+    shader.setUniform3f("lightPosition", light.position);
+    shader.setUniform3f("lightColor", light.color * light.intensity);
+    shader.setUniform3f("ambientColor", ambientLight);
+    shader.setUniformMatrix4f("mvp",
+        camMatrices.getProj() * camMatrices.getView() * modelMatrix);
+    shader.setUniformMatrix4f("model", modelMatrix);
+    shader.setUniformMatrix3f("normalMatrix",
+        inverse(transpose(mat3(modelMatrix))));
+    mesh.draw();
+}
 
-    //cout << position << endl;
+void drawMesh(const CameraMatrices& camMatrices,
+    const SpotLight& light,
+    const glm::vec3 ambientLight,
+    ofShader& shader, ofMesh& mesh,
+    glm::mat4 modelMatrix = glm::mat4 {})
+{
+    using namespace glm;
+
+    // assumes shader is already active
+    shader.setUniform3f("lightPosition", light.position);
+    shader.setUniform3f("lightConeDirection", light.direction);
+    shader.setUniform1f("lightCutoff", light.cutoff);
+    shader.setUniform3f("lightColor", light.color * light.intensity);
+    shader.setUniform3f("ambientColor", ambientLight);
+    shader.setUniformMatrix4f("mvp",
+        camMatrices.getProj() * camMatrices.getView() * modelMatrix);
+    shader.setUniformMatrix4f("model", modelMatrix);
+    shader.setUniformMatrix3f("normalMatrix",
+        inverse(transpose(mat3(modelMatrix))));
+    mesh.draw();
+}
+
+void ofApp::drawCube(const CameraMatrices& camMatrices)
+{
+    using namespace glm;
+
+    skyboxShader.begin();
+    glDepthFunc(GL_LEQUAL); // pass depth test at far clipping plane
+    skyboxShader.setUniformMatrix4f("mvp",
+        camMatrices.getProj() * mat4(mat3(camMatrices.getView())));
+    skyboxShader.setUniformTexture("cubemap", cubemap.getTexture(), 0);
+    cubeMesh.draw();
+    skyboxShader.end();
+    glDepthFunc(GL_LESS);
+}
+
+void ofApp::drawScene(CameraMatrices& camMatrices, int reflection)
+{
+    using namespace glm;
+
+    // Define the directional light
+    DirectionalLight dirLight { };
+    dirLight.direction = normalize(vec3(-1, 1, -1));
+    dirLight.color = vec3(1, 1, 0);  // white light
+    dirLight.intensity = 5;
+
+    // Define the point light
+    PointLight pointLight { };
+    pointLight.position = vec3(0, 0, 1.5);
+    pointLight.color = vec3(1, 1, 1);  // white light
+    pointLight.intensity = 1;
+
+    // Define the spot light
+    SpotLight spotLight { };
+    spotLight.position = vec3(0, 2, 0.5);
+    spotLight.direction = vec3(0, -1, -1);
+    spotLight.cutoff = cos(radians(10.0f /* degrees */));
+    spotLight.color = vec3(0.1, 0.1, 1);  // blue light
+    spotLight.intensity = 10;
+
+    //directionalLightShader.begin();
+    //// Set up the textures in advance
+    //directionalLightShader.setUniformTexture("diffuseTex", shieldDiffuse, 0);
+    //directionalLightShader.setUniformTexture("normalTex", shieldNormal, 1); // IMPORTANT: Use a different slot
+    //directionalLightShader.setUniformTexture("specularTex", shieldSpecular, 2);
+    //directionalLightShader.setUniformTexture("envMap", cubemap.getTexture(), 3);
+    //directionalLightShader.setUniform1f("shininess", 64.0);
+    //directionalLightShader.setUniform1i("reflection", reflection);
+    //drawMesh(camMatrices, dirLight, vec3(0.0),
+    //    directionalLightShader, shieldMesh,
+    //    translate(vec3(shieldPosition)));
+    //directionalLightShader.setUniformTexture("diffuseTex", swordDiffuse, 0);
+    //directionalLightShader.setUniformTexture("normalTex", swordNormal, 1);
+    //drawMesh(camMatrices, dirLight, vec3(0.0),
+    //    directionalLightShader, swordMesh,
+    //    translate(vec3(swordPosition)));
+    //drawMesh(camMatrices, dirLight, vec3(0.0),
+    //    directionalLightShader, staffMesh,
+    //    translate(vec3(staffPosition)));
+    //drawMesh(camMatrices, dirLight, vec3(0.0),
+    //    directionalLightShader, cupMesh,
+    //    translate(vec3(cupPosition)));
+    //directionalLightShader.end();
+
+    spotLightShader.begin();
+    // Set up the textures in advance
+    spotLightShader.setUniformTexture("diffuseTex", shieldDiffuse, 0);
+    spotLightShader.setUniformTexture("normalTex", shieldNormal, 1); // IMPORTANT: Use a different slot
+    drawMesh(camMatrices, spotLight, vec3(0.10),
+        spotLightShader, shieldMesh,
+        translate(vec3(shieldPosition)));
+    spotLightShader.end();
+
+    drawCube(camMatrices);
 }
 
 //--------------------------------------------------------------
@@ -310,73 +286,124 @@ void ofApp::draw()
 {
     using namespace glm;
 
-    float width{ static_cast<float>(ofGetViewportWidth()) };
-    float height{ static_cast<float>(ofGetViewportHeight()) };
-    float aspect{ width / height };
+    float width { static_cast<float>(ofGetViewportWidth()) };
+    float height { static_cast<float>(ofGetViewportHeight()) };
+    float aspect = width / height;
+    float nearPlane = 1.0f;
+    float farPlane = 20.0f;
 
-    mat4 model{ rotate(radians(0.0f), vec3(1, 1, 1)) * scale(vec3(0.5, 0.5, 0.5)) };
-    mat4 view{ (rotate(cameraPitch, vec3(1, 0, 0)) * rotate(cameraHead, vec3(0, 1, 0))) * translate(-position) };
-    mat4 proj{ perspective(radians(90.0f), aspect, 0.01f, 20.0f) };
+    //spotLight.position = vec3(0, 2, 1);
+    //spotLight.direction = vec3(0, -1, -1);
 
-    mat4 mvp{ proj * view * model };
 
-    shader.begin(); // start using the shader
-    shader.setUniformMatrix4f("mvp", mvp);
-    //cubeMesh.draw();
-    terrainMesh.draw();
-    shader.end(); // done with the shader
+
+    // in lookAt, use spot light position for eye, position + direction for center, and (0,1,0) for up
+    mat4 shadowView = 
+        (lookAt(vec3(0, 2, 1), vec3(0, 1, 0), vec3(0, 1, 0)));
+        //mat4(mat3(rotate(0.0f, vec3(0, -1, 0)) * translate(vec3(0, 2, 0))));
+    mat4 shadowProj = 
+        //glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, -20.0f, 20.0f);
+        perspective(radians(90.0f), aspect, nearPlane, farPlane);
+        
+    //Camera shadowCamera{ glm::vec3(0, 2, 1)};
+    //camera.rotation = rotate(cameraHead, vec3(0, 1, 0)) *
+    //    rotate(cameraPitch, vec3(1, 0, 0));
+    //shadowCamera.rotation = rotate(radians(0.0f), vec3(0, -1, -1));
+
+    // FBO camera
+    //CameraMatrices fboCamMatrices{ shadowCamera, cos(radians(10.0f /* degrees */)), 0.01f, 4.0f };
+    CameraMatrices fboCamMatrices{ shadowView, shadowProj };
+    //cout << fboCamMatrices.getProj() << endl << endl;
+    // Calculate the view and projection matrices for the camera.
+    CameraMatrices camMatrices { camera, aspect, 0.01f, 40.0f };
+    //camMatrices = fboCamMatrices;
+
+    // offscreen rendering pass
+    fbo.begin();
+    ofClear(0, 0, 0, 0);
+    drawScene(fboCamMatrices, 1);
+    fbo.end();
+
+
+    drawScene(camMatrices, 0);
+
+    planeShader.begin();
+    planeShader.setUniform3f("cameraPos", camMatrices.getCamera().position);
+    planeShader.setUniformMatrix4f("mvp", camMatrices.getProj() * camMatrices.getView());
+    planeShader.setUniformMatrix4f("model", mat4());
+    planeShader.setUniformMatrix3f("normalMatrix", mat3());
+    planeShader.setUniformMatrix4f("shadowMatrix", 
+        fboCamMatrices.getProj() * fboCamMatrices.getView());
+    planeShader.setUniformTexture("fboTexture", fbo.getDepthTexture(), 0);
+    planeMesh.draw();
+    planeShader.end();
 }
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key)
 {
-    if (key == 'w')
+    using namespace glm;
+
+    if (key == OF_KEY_UP || key == 'w')
     {
+        // Forward motion
+        // Converting from camera space velocity to world space velocity
         velocity.z = -1;
     }
-    else if (key == 's')
+    else if (key == OF_KEY_DOWN || key == 's')
     {
+        // Backwards motion
+        // Converting from camera space velocity to world space velocity
         velocity.z = 1;
     }
-    else if (key == 'a')
+    else if (key == OF_KEY_LEFT || key == 'a')
     {
+        // Forward motion
+        // Converting from camera space velocity to world space velocity
         velocity.x = -1;
     }
-    else if (key == 'd')
+    else if (key == OF_KEY_RIGHT || key == 'd')
     {
+        // Backwards motion
+        // Converting from camera space velocity to world space velocity
         velocity.x = 1;
     }
 
-    // Added R and F to go up and down, relative to where the camera is pointing
-    else if (key == 'f')
-    {
-        velocity.y = -1;
-    }
     else if (key == 'r')
     {
+        // Backwards motion
+        // Converting from camera space velocity to world space velocity
         velocity.y = 1;
     }
-
-    // Allowing the user to disable mouseMovement with E
-    if (key == 'e')
+    else if (key == 'f')
     {
-        allowMouseMovement = !allowMouseMovement;
+        // Backwards motion
+        // Converting from camera space velocity to world space velocity
+        velocity.y = -1;
     }
 }
 
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key)
 {
-    if (key == 'w' || key == 's')
+    if (key == '`')
     {
-        velocity.z = 0;
+        // Reload shaders
+        needsReload = true;
     }
-    else if (key == 'a' || key == 'd')
+    else if (key == OF_KEY_LEFT || key == 'a' || key == OF_KEY_RIGHT || key == 'd')
     {
+        // Reset velocity when a key is released
         velocity.x = 0;
     }
-    else if (key == 'f' || key == 'r')
+    else if (key == OF_KEY_UP || key == 'w' || key == OF_KEY_DOWN || key == 's')
     {
+        // Reset velocity when a key is released
+        velocity.z = 0;
+    }
+    else if ( key == 'r' || key == 'f')
+    {
+        // Reset velocity when a key is released
         velocity.y = 0;
     }
 }
@@ -384,16 +411,16 @@ void ofApp::keyReleased(int key)
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y)
 {
-    if (allowMouseMovement)
+    if (prevX != 0 && prevY != 0)
     {
-        if (prevX != 0 && prevY != 0)
-        {
-            // Update camera rotation based on mouse movement
-            updateCameraRotation(mouseSensitivity * (x - prevX), mouseSensitivity * (y - prevY));
-        }
+        // Previous mouse position has been initialized.
+        // Calculate dx and dy
+        int dx = x - prevX;
+        int dy = y - prevY;
+
+        updateCameraRotation(mouseSensitivity * dx, mouseSensitivity * dy);
     }
 
-    // Remember where the mouse was this frame.
     prevX = x;
     prevY = y;
 }

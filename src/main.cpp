@@ -4,12 +4,15 @@
 //========================================================================
 int main()
 {
-    ofGLWindowSettings glSettings;
-    glSettings.setSize(1024, 768);
-    glSettings.windowMode = OF_WINDOW;
-    glSettings.setGLVersion(4, 1);
-    ofCreateWindow(glSettings);
+	ofGLWindowSettings glSettings;
+	glSettings.setSize(1024, 768);
+	glSettings.windowMode = OF_WINDOW;
+	glSettings.setGLVersion(4, 1);
+	auto window { ofCreateWindow(glSettings) };
+	//window->setFullscreen(true);
 
-    printf("%s\n", glGetString(GL_VERSION));
-    ofRunApp(new ofApp());
+	// this kicks off the running of my app
+	// can be OF_WINDOW or OF_FULLSCREEN
+	// pass in width and height too:
+	ofRunApp(new ofApp());
 }

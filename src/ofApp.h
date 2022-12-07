@@ -1,74 +1,114 @@
 #pragma once
+
 #include "ofMain.h"
+#include "Camera.h"
+#include "ofxCubemap.h"
+#include "CameraMatrices.h"
 
 class ofApp : public ofBaseApp
 {
 public:
-    void setup();
-    void update();
-    void draw();
+	void setup();
+	void update();
+	void draw();
 
-    void keyPressed(int key);
-    void keyReleased(int key);
-    void mouseMoved(int x, int y);
-    void mouseDragged(int x, int y, int button);
-    void mousePressed(int x, int y, int button);
-    void mouseReleased(int x, int y, int button);
-    void mouseEntered(int x, int y);
-    void mouseExited(int x, int y);
-    void windowResized(int w, int h);
-    void dragEvent(ofDragInfo dragInfo);
-    void gotMessage(ofMessage msg);
+	void keyPressed(int key);
+	void keyReleased(int key);
+	void mouseMoved(int x, int y);
+	void mouseDragged(int x, int y, int button);
+	void mousePressed(int x, int y, int button);
+	void mouseReleased(int x, int y, int button);
+	void mouseEntered(int x, int y);
+	void mouseExited(int x, int y);
+	void windowResized(int w, int h);
+	void dragEvent(ofDragInfo dragInfo);
+	void gotMessage(ofMessage msg);
 
 private:
-    // 3D perspective shader
-    ofShader shader;
+	// Shader for a directional light
+	ofShader directionalLightShader;
 
-    // Torus mesh object
-    ofMesh torusMesh;
+	// Shader for a directional light
+	ofShader pointLightShader;
 
-    // Cube mesh object
-    ofMesh cubeMesh;
+	// Shader for a spot light
+	ofShader spotLightShader;
 
-    // Circle mesh object
-    ofMesh circleMesh;
+	// Mesh of a shield
+	ofMesh shieldMesh;
+	ofMesh staffMesh;
+	ofMesh jarMesh;
+	ofMesh coneMesh;
+	ofMesh cube;
+	ofMesh cylinderMesh;
+	ofMesh sphereMesh;
+	ofMesh torusMesh;
 
-    // Cylinder mesh object
-    ofMesh cylinderMesh;
+	// diffuse (color) texture
+	ofImage shieldDiffuse;
 
-    // Sphere mesh object
-    ofMesh sphereMesh;
+	// normal map
+	ofImage shieldNormal;
 
-    // Do shaders need to be reloaded?
-    bool needsReload{ true };
+	// specular texture
+	ofImage shieldSpecular;
 
-    // Load the shaders for this app
-    void reloadShaders();
+	// Mesh for the skybox
+	ofMesh cubeMesh;
 
-    // (x, y) from the previous frame
-    int prevX{ 0 }, prevY{ 0 };
+	// Cubemap texture
+	ofxCubemap cubemap;
 
-    // How many radians of rotation correspond to a single pixel of movement of the cursor.
-    float mouseSensitivity{ 0.02f };
+	// Shader for rendering the skybox with a cubemap
+	ofShader skyboxShader;
 
-    // The current head direction of the camera in radians.
-    float cameraHead{ 0 };
+	void drawCube(const CameraMatrices& camMatrices);
 
-    float cameraPitch{ 0 };
+	// Do shaders need to be reloaded?
+	bool needsReload { true };
 
-    // Velocity of the camera (from WASD) -- in camera space
-    glm::vec3 velocity{ };
+	// Load the shaders for this app
+	void reloadShaders();
 
-    // Position of the camera in world space
-    glm::vec3 position{ 0, 10, 0 };
+	// Keep track of previous mouse position
+	int prevX { 0 }, prevY { 0 };
 
-    // update camera rotation based on mouse movement
-    void updateCameraRotation(float dx, float dy);
+	// Allows us to configure how much moving the mouse affects the rotation
+	float mouseSensitivity { 0.02f };
 
-    ofMesh terrainMesh;
+	// Called to update rotation of the camera from mouse movement
+	void updateCameraRotation(float dx, float dy);
 
-    bool allowMouseMovement{ true };
+	// Euler transformation
+	float cameraHead { 0 };
+	float cameraPitch { 0 };
 
+	// Camera position
+	Camera camera { glm::vec3(0, 1, 2) };
 
-    //ofShortPixels heightmap;
+	// Camera velocity
+	glm::vec3 velocity {};
+
+	// Animate shield position
+	float time { 0 };
+	glm::vec3 shieldPosition {0, 1, 2 };
+	glm::vec3 staffPosition { 0, 1, 0 };
+	glm::vec3 jarPosition { 0, 1, 0 };
+	glm::vec3 conePosition{ 0, 1, 0 };
+	glm::vec3 cubePosition{ 0, 1, 0 };
+	glm::vec3 cylinderPosition{ -3, 1, 0 };
+	glm::vec3 spherePosition{ 0, 1, 0 };
+	glm::vec3 torusPosition{ 3, 1, 0 };
+
+	// Plane shader
+	ofShader planeShader {};
+
+	// Plane mesh
+	ofMesh planeMesh {};
+
+	// off-screen framebuffer object
+	ofFbo fbo {};
+
+	// Draws the whole scene using the currently active framebuffer
+	void drawScene(CameraMatrices& camMatrices, int reflection);
 };

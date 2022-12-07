@@ -189,7 +189,7 @@ void drawMesh(const CameraMatrices& camMatrices,
     const SpotLight& light,
     const glm::vec3 ambientLight,
     ofShader& shader, ofMesh& mesh,
-    glm::mat4 modelMatrix = glm::mat4 {})
+    glm::mat4 modelMatrix = glm::mat4{})
 {
     using namespace glm;
 
@@ -198,6 +198,38 @@ void drawMesh(const CameraMatrices& camMatrices,
     shader.setUniform3f("lightConeDirection", light.direction);
     shader.setUniform1f("lightCutoff", light.cutoff);
     shader.setUniform3f("lightColor", light.color * light.intensity);
+    shader.setUniform3f("ambientColor", ambientLight);
+    shader.setUniformMatrix4f("mvp",
+        camMatrices.getProj() * camMatrices.getView() * modelMatrix);
+    shader.setUniformMatrix4f("model", modelMatrix);
+    shader.setUniformMatrix3f("normalMatrix",
+        inverse(transpose(mat3(modelMatrix))));
+    mesh.draw();
+}
+
+void drawMesh(const CameraMatrices& camMatrices,
+    const SpotLight& spotLight,
+    const DirectionalLight& dirLight,
+    const glm::vec3 ambientLight,
+    ofShader& shader, ofMesh& mesh,
+    glm::mat4 modelMatrix = glm::mat4{})
+{
+    using namespace glm;
+
+    // assumes shader is already active
+
+    shader.setUniform3f("cameraPosition", camMatrices.getCamera().position);
+    shader.setUniform3f("lightDir", dirLight.direction);
+    shader.setUniform3f("lightColor", dirLight.color * dirLight.intensity);
+
+
+
+    shader.setUniform3f("lightPosition", spotLight.position);
+    shader.setUniform3f("lightConeDirection", spotLight.direction);
+    shader.setUniform1f("lightCutoff", spotLight.cutoff);
+    shader.setUniform3f("lightColor", spotLight.color * spotLight.intensity);
+
+
     shader.setUniform3f("ambientColor", ambientLight);
     shader.setUniformMatrix4f("mvp",
         camMatrices.getProj() * camMatrices.getView() * modelMatrix);
@@ -227,9 +259,9 @@ void ofApp::drawScene(CameraMatrices& camMatrices, int reflection)
 
     // Define the directional light
     DirectionalLight dirLight { };
-    dirLight.direction = normalize(vec3(-1, 1, -1));
-    dirLight.color = vec3(1, 1, 0);  // white light
-    dirLight.intensity = 5;
+    dirLight.direction = normalize(vec3(1, 1, 1));
+    dirLight.color = vec3(0.9, 0.9, 0.1);  // white light
+    dirLight.intensity = 1;
 
     // Define the point light
     PointLight pointLight { };
@@ -239,44 +271,44 @@ void ofApp::drawScene(CameraMatrices& camMatrices, int reflection)
 
     // Define the spot light
     SpotLight spotLight { };
-    spotLight.position = vec3(0, 2, 0.5);
+    spotLight.position = vec3(0, 2, 1);
     spotLight.direction = vec3(0, -1, -1);
     spotLight.cutoff = cos(radians(10.0f /* degrees */));
-    spotLight.color = vec3(0.1, 0.1, 1);  // blue light
+    spotLight.color = vec3(0.1, 0.1, 0.9);  // blue light
     spotLight.intensity = 10;
 
-    //directionalLightShader.begin();
-    //// Set up the textures in advance
-    //directionalLightShader.setUniformTexture("diffuseTex", shieldDiffuse, 0);
-    //directionalLightShader.setUniformTexture("normalTex", shieldNormal, 1); // IMPORTANT: Use a different slot
-    //directionalLightShader.setUniformTexture("specularTex", shieldSpecular, 2);
-    //directionalLightShader.setUniformTexture("envMap", cubemap.getTexture(), 3);
-    //directionalLightShader.setUniform1f("shininess", 64.0);
-    //directionalLightShader.setUniform1i("reflection", reflection);
-    //drawMesh(camMatrices, dirLight, vec3(0.0),
-    //    directionalLightShader, shieldMesh,
-    //    translate(vec3(shieldPosition)));
-    //directionalLightShader.setUniformTexture("diffuseTex", swordDiffuse, 0);
-    //directionalLightShader.setUniformTexture("normalTex", swordNormal, 1);
-    //drawMesh(camMatrices, dirLight, vec3(0.0),
-    //    directionalLightShader, swordMesh,
-    //    translate(vec3(swordPosition)));
-    //drawMesh(camMatrices, dirLight, vec3(0.0),
-    //    directionalLightShader, staffMesh,
-    //    translate(vec3(staffPosition)));
-    //drawMesh(camMatrices, dirLight, vec3(0.0),
-    //    directionalLightShader, cupMesh,
-    //    translate(vec3(cupPosition)));
-    //directionalLightShader.end();
-
-    spotLightShader.begin();
+    directionalLightShader.begin();
     // Set up the textures in advance
-    spotLightShader.setUniformTexture("diffuseTex", shieldDiffuse, 0);
-    spotLightShader.setUniformTexture("normalTex", shieldNormal, 1); // IMPORTANT: Use a different slot
-    drawMesh(camMatrices, spotLight, vec3(0.10),
-        spotLightShader, shieldMesh,
+    directionalLightShader.setUniformTexture("diffuseTex", shieldDiffuse, 0);
+    directionalLightShader.setUniformTexture("normalTex", shieldNormal, 1); // IMPORTANT: Use a different slot
+    directionalLightShader.setUniformTexture("specularTex", shieldSpecular, 2);
+    directionalLightShader.setUniformTexture("envMap", cubemap.getTexture(), 3);
+    directionalLightShader.setUniform1f("shininess", 64.0);
+    directionalLightShader.setUniform1i("reflection", reflection);
+    drawMesh(camMatrices, dirLight, vec3(0.0),
+        directionalLightShader, shieldMesh,
         translate(vec3(shieldPosition)));
-    spotLightShader.end();
+    directionalLightShader.setUniformTexture("diffuseTex", swordDiffuse, 0);
+    directionalLightShader.setUniformTexture("normalTex", swordNormal, 1);
+    drawMesh(camMatrices, dirLight, vec3(0.0),
+        directionalLightShader, swordMesh,
+        translate(vec3(swordPosition)));
+    drawMesh(camMatrices, dirLight, vec3(0.0),
+        directionalLightShader, staffMesh,
+        translate(vec3(staffPosition)));
+    drawMesh(camMatrices, dirLight, vec3(0.0),
+        directionalLightShader, cupMesh,
+        translate(vec3(cupPosition)));
+    directionalLightShader.end();
+
+    //spotLightShader.begin();
+    //// Set up the textures in advance
+    //spotLightShader.setUniformTexture("diffuseTex", shieldDiffuse, 0);
+    //spotLightShader.setUniformTexture("normalTex", shieldNormal, 1); // IMPORTANT: Use a different slot
+    //drawMesh(camMatrices, spotLight, vec3(0.10),
+    //    spotLightShader, shieldMesh,
+    //    translate(vec3(shieldPosition)));
+    //spotLightShader.end();
 
     drawCube(camMatrices);
 }
@@ -295,15 +327,19 @@ void ofApp::draw()
     //spotLight.position = vec3(0, 2, 1);
     //spotLight.direction = vec3(0, -1, -1);
 
+    mat4 spotShadowView = (lookAt(vec3(0, 2, 1), vec3(0, 1, 0), vec3(0, 1, 0)));
+
+    mat4 spotShadowProj = perspective((radians(90.0f)), aspect, nearPlane, farPlane);
 
 
     // in lookAt, use spot light position for eye, position + direction for center, and (0,1,0) for up
-    mat4 shadowView = 
-        (lookAt(vec3(0, 2, 1), vec3(0, 1, 0), vec3(0, 1, 0)));
-        //mat4(mat3(rotate(0.0f, vec3(0, -1, 0)) * translate(vec3(0, 2, 0))));
-    mat4 shadowProj = 
-        //glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, -20.0f, 20.0f);
-        perspective(radians(90.0f), aspect, nearPlane, farPlane);
+    mat4 dirShadowView = 
+        //(lookAt(vec3(0, 2, 1), vec3(0, 1, 0), vec3(0, 1, 0)));
+        mat4(mat3(lookAt(vec3(1, 1, 1), vec3(0, 0, 0), vec3(0, 1, 0))));
+
+    mat4 dirShadowProj = 
+        glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, -20.0f, 20.0f);
+        //perspective((radians(90.0f)), aspect, nearPlane, farPlane);
         
     //Camera shadowCamera{ glm::vec3(0, 2, 1)};
     //camera.rotation = rotate(cameraHead, vec3(0, 1, 0)) *
@@ -312,28 +348,48 @@ void ofApp::draw()
 
     // FBO camera
     //CameraMatrices fboCamMatrices{ shadowCamera, cos(radians(10.0f /* degrees */)), 0.01f, 4.0f };
-    CameraMatrices fboCamMatrices{ shadowView, shadowProj };
+    CameraMatrices dirFboCamMatrices{ dirShadowView, dirShadowProj };
+
+    CameraMatrices spotFboCamMatrices{ spotShadowView, spotShadowProj };
+
     //cout << fboCamMatrices.getProj() << endl << endl;
     // Calculate the view and projection matrices for the camera.
     CameraMatrices camMatrices { camera, aspect, 0.01f, 40.0f };
-    //camMatrices = fboCamMatrices;
+    //camMatrices = dirFboCamMatrices;
+    //camMatrices = spotFboCamMatrices;
 
     // offscreen rendering pass
     fbo.begin();
     ofClear(0, 0, 0, 0);
-    drawScene(fboCamMatrices, 1);
+    //drawScene(dirFboCamMatrices, 1);
+    drawScene(spotFboCamMatrices, 1);
     fbo.end();
 
 
     drawScene(camMatrices, 0);
 
+    //spotLight.position = vec3(0, 2, 0.5);
+    //spotLight.direction = vec3(0, -1, -1);
+    //spotLight.cutoff = cos(radians(10.0f /* degrees */));
+    //spotLight.color = vec3(0.1, 0.1, 1);  // blue light
+    //spotLight.intensity = 10;
+
+
     planeShader.begin();
+
+    planeShader.setUniform3f("lightPosition", vec3(0, 2, 1));
+    planeShader.setUniform3f("lightConeDirection", vec3(0, -1, -1));
+    planeShader.setUniform1f("lightCutoff", cos(radians(10.0f /* degrees */)));
+
+    planeShader.setUniform3f("lightColor", vec3(0.1, 0.1, 1));
+    planeShader.setUniform3f("ambientColor", vec3(0.1));
+
     planeShader.setUniform3f("cameraPos", camMatrices.getCamera().position);
     planeShader.setUniformMatrix4f("mvp", camMatrices.getProj() * camMatrices.getView());
     planeShader.setUniformMatrix4f("model", mat4());
     planeShader.setUniformMatrix3f("normalMatrix", mat3());
     planeShader.setUniformMatrix4f("shadowMatrix", 
-        fboCamMatrices.getProj() * fboCamMatrices.getView());
+        spotFboCamMatrices.getProj() * spotFboCamMatrices.getView());
     planeShader.setUniformTexture("fboTexture", fbo.getDepthTexture(), 0);
     planeMesh.draw();
     planeShader.end();

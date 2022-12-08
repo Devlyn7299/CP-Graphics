@@ -1,5 +1,4 @@
 #pragma once
-
 #include "ofMain.h"
 #include "Camera.h"
 #include "ofxCubemap.h"
@@ -8,107 +7,109 @@
 class ofApp : public ofBaseApp
 {
 public:
-	void setup();
-	void update();
-	void draw();
+    void setup();
+    void update();
+    void draw();
 
-	void keyPressed(int key);
-	void keyReleased(int key);
-	void mouseMoved(int x, int y);
-	void mouseDragged(int x, int y, int button);
-	void mousePressed(int x, int y, int button);
-	void mouseReleased(int x, int y, int button);
-	void mouseEntered(int x, int y);
-	void mouseExited(int x, int y);
-	void windowResized(int w, int h);
-	void dragEvent(ofDragInfo dragInfo);
-	void gotMessage(ofMessage msg);
+    void keyPressed(int key);
+    void keyReleased(int key);
+    void mouseMoved(int x, int y);
+    void mouseDragged(int x, int y, int button);
+    void mousePressed(int x, int y, int button);
+    void mouseReleased(int x, int y, int button);
+    void mouseEntered(int x, int y);
+    void mouseExited(int x, int y);
+    void windowResized(int w, int h);
+    void dragEvent(ofDragInfo dragInfo);
+    void gotMessage(ofMessage msg);
+
 
 private:
-	// Shader for a directional light
-	ofShader directionalLightShader;
+    // Shader for a directional light
+    ofShader directionalLightShader;
 
-	// Shader for a directional light
-	ofShader pointLightShader;
+    // Shader for a directional light
+    ofShader pointLightShader;
 
-	// Shader for a spot light
-	ofShader spotLightShader;
+    // Shader for a spot light
+    ofShader spotLightShader;
 
-	// Mesh of a shield
-	ofMesh shieldMesh;
-	ofMesh staffMesh;
-	ofMesh jarMesh;
-	ofMesh coneMesh;
-	ofMesh cube;
-	ofMesh cylinderMesh;
-	ofMesh sphereMesh;
-	ofMesh torusMesh;
+    // Mesh of a shield
+    ofMesh shieldMesh;
+    ofMesh staffMesh;
+    ofMesh jarMesh;
+    ofMesh coneMesh;
+    ofMesh cube;
+    ofMesh cylinderMesh;
+    ofMesh sphereMesh;
+    ofMesh torusMesh;
 
-	// diffuse (color) texture
-	ofImage shieldDiffuse;
+    // diffuse (color) texture
+    ofImage shieldDiffuse;
 
-	// normal map
-	ofImage shieldNormal;
+    // normal map
+    ofImage shieldNormal;
 
-	// specular texture
-	ofImage shieldSpecular;
+    // specular texture
+    ofImage shieldSpecular;
 
-	// Mesh for the skybox
-	ofMesh cubeMesh;
+    // Mesh for the skybox
+    ofMesh cubeMesh;
 
-	// Cubemap texture
-	ofxCubemap cubemap;
+    // Cubemap texture
+    ofxCubemap cubemap;
 
-	// Shader for rendering the skybox with a cubemap
-	ofShader skyboxShader;
+    // Shader for rendering the skybox with a cubemap
+    ofShader skyboxShader;
 
-	void drawCube(const CameraMatrices& camMatrices);
+    // 3D perspective shader
+    ofShader shader;
 
-	// Do shaders need to be reloaded?
-	bool needsReload { true };
+    // mesh for the low resolution terrain
+    ofMesh terrainMesh;
 
-	// Load the shaders for this app
-	void reloadShaders();
+    // image used to build low resolution terrain mesh
+    ofShortImage heightmap{};
 
-	// Keep track of previous mouse position
-	int prevX { 0 }, prevY { 0 };
+    // image used to build high resolutino terrain mesh
+    ofShortImage heightmapHiRes{};
 
-	// Allows us to configure how much moving the mouse affects the rotation
-	float mouseSensitivity { 0.02f };
+    // mesh for the water
+    ofMesh water;
 
-	// Called to update rotation of the camera from mouse movement
-	void updateCameraRotation(float dx, float dy);
+    // CellManager used to build cells of the high resolution heightmap mesh
+    CellManager<7> cellManager{ heightmapHiRes, 1600, 256 };
 
-	// Euler transformation
-	float cameraHead { 0 };
-	float cameraPitch { 0 };
+    // boolean that either allows or disallows mouse movement
+    bool allowMouseMovement{ true };
 
-	// Camera position
-	Camera camera { glm::vec3(0, 1, 2) };
+    // Do shaders need to be reloaded?
+    bool needsReload{ true };
 
-	// Camera velocity
-	glm::vec3 velocity {};
+    // Load the shaders for this app
+    void reloadShaders();
 
-	// Animate shield position
-	float time { 0 };
-	glm::vec3 shieldPosition {0, 1, 2 };
-	glm::vec3 staffPosition { 0, 1, 0 };
-	glm::vec3 jarPosition { 0, 1, 0 };
-	glm::vec3 conePosition{ 0, 1, 0 };
-	glm::vec3 cubePosition{ 0, 1, 0 };
-	glm::vec3 cylinderPosition{ -3, 1, 0 };
-	glm::vec3 spherePosition{ 0, 1, 0 };
-	glm::vec3 torusPosition{ 3, 1, 0 };
+    // (x, y) from the previous frame
+    int prevX{ 0 }, prevY{ 0 };
 
-	// Plane shader
-	ofShader planeShader {};
+    // How many radians of rotation correspond to a single pixel of movement of the cursor.
+    float mouseSensitivity{ 0.02f };
 
-	// Plane mesh
-	ofMesh planeMesh {};
+    // The current head direction of the camera in radians.
+    float cameraHead{ 0 };
 
-	// off-screen framebuffer object
-	ofFbo fbo {};
+    // The current pitch direction of the camera in radians
+    float cameraPitch{ 0 };
 
-	// Draws the whole scene using the currently active framebuffer
-	void drawScene(CameraMatrices& camMatrices, int reflection);
+    // update camera rotation based on mouse movement
+    void updateCameraRotation(float dx, float dy);
+
+    // Velocity of the camera (from WASD) -- in camera space
+    glm::vec3 velocity{ };
+
+    // Position of the camera in world space
+    glm::vec3 position{ };
+
+    // Exit function to be used for the cellManager when the program is closed
+    void exit();
 };

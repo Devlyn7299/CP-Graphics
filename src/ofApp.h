@@ -4,7 +4,6 @@
 #include "Camera.h"
 #include "ofxCubemap.h"
 #include "CameraMatrices.h"
-#include "CellManager.h"
 
 class ofApp : public ofBaseApp
 {
@@ -24,7 +23,6 @@ public:
 	void windowResized(int w, int h);
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
-
 
 private:
 	// Shader for a directional light
@@ -51,23 +49,6 @@ private:
 
 	// normal map
 	ofImage shieldNormal;
-    // mesh for the low resolution terrain
-    ofMesh terrainMesh;
-
-    // image used to build low resolution terrain mesh
-    ofShortImage heightmap{};
-
-    // image used to build high resolutino terrain mesh
-    ofShortImage heightmapHiRes{};
-
-    // mesh for the water
-    ofMesh water;
-
-    // CellManager used to build cells of the high resolution heightmap mesh
-    CellManager<7> cellManager{ heightmapHiRes, 1600, 256 };
-
-    // boolean that either allows or disallows mouse movement
-    bool allowMouseMovement{ true };
 
 	// specular texture
 	ofImage shieldSpecular;
@@ -130,18 +111,4 @@ private:
 
 	// Draws the whole scene using the currently active framebuffer
 	void drawScene(CameraMatrices& camMatrices, int reflection);
-    // The current pitch direction of the camera in radians
-    float cameraPitch{ 0 };
-
-    // update camera rotation based on mouse movement
-    void updateCameraRotation(float dx, float dy);
-
-    // Velocity of the camera (from WASD) -- in camera space
-    glm::vec3 velocity{ };
-
-    // Position of the camera in world space
-    glm::vec3 position{ };
-
-    // Exit function to be used for the cellManager when the program is closed
-    void exit();
 };

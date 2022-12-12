@@ -24,6 +24,9 @@ out vec4 outColor;
 
 void main()
 {
+
+
+/*
     // if reflection is > zero and y-coordinate is less than zero.
     if (reflection * fragWorldPos.y < 0.0)
     {
@@ -87,4 +90,16 @@ void main()
 
     // Gamma correction: physically-linear to perceptually-linear (encoding gamma)
     outColor = vec4(pow(totalColor, vec3(1.0 / 2.2)), 1.0);
+*/
+
+    vec3 diffuseColor = pow(texture(diffuseTex, fragUV).rgb, vec3(2.2));
+
+    vec3 tsNormal = texture(normalTex, fragUV).xyz * 2 - 1;
+    vec3 wsNormal = normalize(TBN * tsNormal);
+
+    float nDotL = max(0.0, dot(wsNormal, lightDir));
+
+    vec3 irradiance = ambientColor + lightColor * nDotL;
+
+    outColor = vec4(pow(diffuseColor.rgb * irradiance, vec3(1.0 / 2.2)), 1.0);
 }

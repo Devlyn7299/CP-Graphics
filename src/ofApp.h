@@ -108,8 +108,12 @@ private:
 	// off-screen framebuffer object
 	ofFbo fbo {};
 
+	// second fbo for second light source
+	ofFbo fbo2{};
+
 	// Draws the whole scene using the currently active framebuffer
 	void drawScene(CameraMatrices& camMatrices, int reflection);
 
-
+	// Draws the FPS and frame time on the screen
+	void drawFrameTime();
 };

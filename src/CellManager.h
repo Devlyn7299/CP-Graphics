@@ -7,10 +7,14 @@ struct Cell
 {
 public:
     // The mesh containing the terrain geometry for the cell.
+<<<<<<< Updated upstream
     ofMesh terrainMesh {};
 
     // The VBO for the cell
     ofVbo terrainVBO {};
+=======
+    ofVboMesh terrainMesh {};
+>>>>>>> Stashed changes
 
     // The corner defining the mesh's location in world space.
     glm::vec2 startPos {};
@@ -20,6 +24,7 @@ public:
 
     // Set to false while the cell is inactive so that it's not rendered.
     bool live { false };
+<<<<<<< Updated upstream
 
     // Set to true after loading to refresh the VBO.
     bool needsVBORefresh { false };
@@ -36,6 +41,8 @@ public:
         // Draw the cell.
         terrainVBO.drawElements(GL_TRIANGLES, terrainVBO.getNumIndices());
     }
+=======
+>>>>>>> Stashed changes
 };
 
 // A template class for managing partial terrain meshes, 
@@ -124,7 +131,11 @@ public:
                     // Add new cells to the right of the old active region
                     for (unsigned int j { 0 }; j < 2 * CELL_PAIRS_PER_DIMENSION; j++)
                     {
+<<<<<<< Updated upstream
                         cellLoadQueue.push(vec2(x, newGridStartPos.y) + glm::vec2(2 * CELL_PAIRS_PER_DIMENSION - 1, j) * cellSize);
+=======
+                        cellLoadQueue.push(glm::vec2(x, newGridStartPos.y) + glm::vec2(2 * CELL_PAIRS_PER_DIMENSION - 1, j) * cellSize);
+>>>>>>> Stashed changes
                     }
                 }
             }
@@ -136,7 +147,11 @@ public:
                     // Add new cells to the left of the old active region
                     for (unsigned int j { 0 }; j < 2 * CELL_PAIRS_PER_DIMENSION; j++)
                     {
+<<<<<<< Updated upstream
                         cellLoadQueue.push(vec2(x, newGridStartPos.y + j * cellSize));
+=======
+                        cellLoadQueue.push(glm::vec2(x, newGridStartPos.y + j * cellSize));
+>>>>>>> Stashed changes
                     }
                 }
             }
@@ -171,7 +186,11 @@ public:
                     // Add the top cells
                     for (float x { startX }; x <= endX + 0.00001f; x += cellSize)
                     {
+<<<<<<< Updated upstream
                         cellLoadQueue.push(vec2(x, y + (2 * CELL_PAIRS_PER_DIMENSION - 1) * cellSize));
+=======
+                        cellLoadQueue.push(glm::vec2(x, y + (2 * CELL_PAIRS_PER_DIMENSION - 1) * cellSize));
+>>>>>>> Stashed changes
                     }
                 }
             }
@@ -183,7 +202,11 @@ public:
                     // Add the bottom cells
                     for (float x { startX }; x <= endX + 0.00001f; x += cellSize)
                     {
+<<<<<<< Updated upstream
                         cellLoadQueue.push(vec2(x, y));
+=======
+                        cellLoadQueue.push(glm::vec2(x, y));
+>>>>>>> Stashed changes
                     }
                 }
             }
@@ -206,7 +229,11 @@ public:
             // Make sure the cell is live/active and check the distance from the cell center to the camera position
             if (cell.live && distance(glm::vec2(camPosition.x, camPosition.z), cell.startPos + cellSize * 0.5f) < threshold)
             {
+<<<<<<< Updated upstream
                 cell.draw();
+=======
+                cell.terrainMesh.draw();
+>>>>>>> Stashed changes
             }
         }
     }
@@ -278,11 +305,19 @@ private:
         if (startPos.x < heightmap.getWidth() && startPos.y < heightmap.getHeight())
         {
             // Clamp the size to the bounds of the heightmap
+<<<<<<< Updated upstream
             size = min(size, uvec2(heightmap.getWidth(), heightmap.getHeight()) - startPos - 1u);
 
             // Use buildTerrainMesh() to initialize or re-initialize the mesh.
             // The scale parameter taken by buildTerrainMesh needs to be relative to the dimensions of the heightmap
             buildTerrainMesh(terrainMesh, heightmap.getPixels(), startPos.x, startPos.y, startPos.x + size.x, startPos.y + size.y, vec3(1, heightmapScale, 1));
+=======
+            size = glm::min(size, glm::uvec2(heightmap.getWidth(), heightmap.getHeight()) - startPos - 1u);
+
+            // Use buildTerrainMesh() to initialize or re-initialize the mesh.
+            // The scale parameter taken by buildTerrainMesh needs to be relative to the dimensions of the heightmap
+            buildTerrainMesh(terrainMesh, heightmap.getPixels(), startPos.x, startPos.y, startPos.x + size.x, startPos.y + size.y, glm::vec3(1, heightmapScale, 1));
+>>>>>>> Stashed changes
         }
     }
     
@@ -299,9 +334,12 @@ private:
         cell.terrainMesh.clear();
         buildMeshForTerrainCell(cell.terrainMesh, startIndices, glm::uvec2(cellSize, cellSize));
 
+<<<<<<< Updated upstream
         // VBO needs to be updated
         cell.needsVBORefresh = true;
 
+=======
+>>>>>>> Stashed changes
         // Once the cell has been successfully loaded, make it live.
         cell.loading = false;
         cell.live = true;

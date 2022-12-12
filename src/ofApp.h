@@ -1,14 +1,12 @@
 #pragma once
+
 #include "ofMain.h"
-<<<<<<< Updated upstream
-=======
 #include "World.h"
 #include "CellManager.h"
 #include "Camera.h"
 #include "CharacterPhysics.h"
 #include "ofxXboxController.h"
 #include "CameraMatrices.h"
->>>>>>> Stashed changes
 
 struct HeightmapConfig
 {
@@ -26,10 +24,7 @@ public:
     void setup();
     void update();
     void draw();
-<<<<<<< Updated upstream
-=======
     void exit();
->>>>>>> Stashed changes
 
     void keyPressed(int key);
     void keyReleased(int key);
@@ -44,58 +39,6 @@ public:
     void gotMessage(ofMessage msg);
 
 private:
-<<<<<<< Updated upstream
-    // 3D perspective shader
-    ofShader shader;
-
-    // Torus mesh object
-    ofMesh torusMesh;
-
-    // Cube mesh object
-    ofMesh cubeMesh;
-
-    // Circle mesh object
-    ofMesh circleMesh;
-
-    // Cylinder mesh object
-    ofMesh cylinderMesh;
-
-    // Sphere mesh object
-    ofMesh sphereMesh;
-
-    // Do shaders need to be reloaded?
-    bool needsReload{ true };
-
-    // Load the shaders for this app
-    void reloadShaders();
-
-    // (x, y) from the previous frame
-    int prevX{ 0 }, prevY{ 0 };
-
-    // How many radians of rotation correspond to a single pixel of movement of the cursor.
-    float mouseSensitivity{ 0.02f };
-
-    // The current head direction of the camera in radians.
-    float cameraHead{ 0 };
-
-    float cameraPitch{ 0 };
-
-    // Velocity of the camera (from WASD) -- in camera space
-    glm::vec3 velocity{ };
-
-    // Position of the camera in world space
-    glm::vec3 position{ 0, 10, 0 };
-
-    // update camera rotation based on mouse movement
-    void updateCameraRotation(float dx, float dy);
-
-    ofMesh terrainMesh;
-
-    bool allowMouseMovement{ true };
-
-
-    //ofShortPixels heightmap;
-=======
     // The number of quads in each row and column of a single terrain cell for the close, high level-of-detail terrain.
     const static unsigned int NEAR_LOD_SIZE { 256 };
 
@@ -124,6 +67,8 @@ private:
 
     // Shader for a directional light
     ofShader directionalLightShader;
+    // Shader for a directional light
+    ofShader directionalLightShader2;
 
     // Plane shader
     ofShader shadowShader{};
@@ -147,6 +92,11 @@ private:
     // specular texture
     ofImage shieldSpecular;
 
+    // Plane shader
+    ofShader planeShader{};
+
+    // off-screen framebuffer object
+    ofFbo fbo{};
 
     // A single terrain mesh. Uncomment the following line if not using a cell manager.
     ofMesh farTerrain {};
@@ -188,6 +138,9 @@ private:
     // The local character velocity based on which of the WASD keys are pressed; needs to be transformed from local space to world space.
     glm::vec3 wasdVelocity { 0 };
 
+    // Plane mesh
+    ofMesh planeMesh{};
+
     // boolean that either allows or disallows mouse movement
     bool allowMouseMovement{ true };
 
@@ -209,5 +162,4 @@ private:
 
     // Called to update rotation of the camera from mouse movement
     void updateCameraRotation(float dx, float dy);
->>>>>>> Stashed changes
 };

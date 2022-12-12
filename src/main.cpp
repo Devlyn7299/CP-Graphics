@@ -4,16 +4,6 @@
 //========================================================================
 int main( )
 {
-<<<<<<< Updated upstream
-    ofGLWindowSettings glSettings;
-    glSettings.setSize(1024, 768);
-    glSettings.windowMode = OF_WINDOW;
-    glSettings.setGLVersion(4, 1);
-    ofCreateWindow(glSettings);
-
-    printf("%s\n", glGetString(GL_VERSION));
-    ofRunApp(new ofApp());
-=======
 	ofGLWindowSettings glSettings {};
     glSettings.setSize(1024, 768);
     glSettings.windowMode = OF_WINDOW;
@@ -25,5 +15,4 @@ int main( )
 
 	// This kicks off the running of the app
 	ofRunApp(new ofApp());
->>>>>>> Stashed changes
 }

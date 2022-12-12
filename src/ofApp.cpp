@@ -1,7 +1,4 @@
 #include "ofApp.h"
-<<<<<<< Updated upstream
-#include "buildTerrainMesh.h"
-=======
 #include "CameraMatrices.h"
 #include "GLFW/glfw3.h"
 #include "buildTerrainMesh.h"
@@ -9,242 +6,9 @@
 #include "DirectionalLight.h"
 
 using namespace glm;
->>>>>>> Stashed changes
 
-void buildCube(ofMesh& mesh)
+void buildPlaneMesh(float width, float depth, float height, ofMesh& planeMesh)
 {
-<<<<<<< Updated upstream
-    using namespace glm;
-
-    // Generate the cube mesh
-    mesh.addVertex(vec3(-1, -1, -1)); // front left bottom
-    mesh.addVertex(vec3(-1, -1, 1)); // back  left bottom
-    mesh.addVertex(vec3(-1, 1, -1)); // front left top
-    mesh.addVertex(vec3(-1, 1, 1));  // back  left top
-    mesh.addVertex(vec3(1, -1, -1)); // front right bottom
-    mesh.addVertex(vec3(1, -1, 1));  // back  right bottom
-    mesh.addVertex(vec3(1, 1, -1));  // front right top
-    mesh.addVertex(vec3(1, 1, 1));   // back  right top
-
-    ofIndexType indices[36] =
-    {
-        2, 3, 6, 7, 6, 3, // top
-        0, 4, 1, 1, 4, 5, // bottom
-        0, 1, 2, 2, 1, 3, // left
-        4, 6, 5, 5, 6, 7, // right
-        0, 2, 4, 4, 2, 6, // front
-        1, 5, 3, 3, 5, 7, // back
-    };
-
-    mesh.addIndices(indices, 36);
-
-    mesh.flatNormals();
-
-    for (size_t i{ 0 }; i < mesh.getNumNormals(); i++)
-    {
-        mesh.setNormal(i, -mesh.getNormal(i));
-    }
-}
-
-void buildCircle(ofMesh& mesh, int subdiv)
-{
-    using namespace glm;
-
-    // Populate with vertex positions.
-
-    // Center
-    mesh.addVertex(vec3(0));
-
-    // Outer ring
-    for (int i{ 0 }; i < subdiv; i++)
-    {
-        double theta{ i * (2 * PI) / subdiv };
-        mesh.addVertex(vec3(cos(theta), sin(theta), 0));
-    }
-
-    for (int i{ 0 }; i < subdiv; i++)
-    {
-        mesh.addIndex(0);
-        mesh.addIndex(1 /* outer ring start */ + i);
-        mesh.addIndex(1 /* outer ring start */ + (i + 1) % subdiv);
-    }
-
-    mesh.flatNormals();
-
-    for (size_t i{ 0 }; i < mesh.getNumNormals(); i++)
-    {
-        mesh.setNormal(i, -mesh.getNormal(i));
-    }
-}
-
-void buildCylinder(ofMesh& mesh, int subdiv)
-{
-    using namespace glm;
-
-    // Populate with vertex positions.
-
-    // Top center
-    mesh.addVertex(vec3(0, 1, 0)); // vertex 0
-
-    // Top outer ring -- vertices 1 through subdiv
-    for (int i{ 0 }; i < subdiv; i++)
-    {
-        double theta{ i * (2 * PI) / subdiv };
-        mesh.addVertex(vec3(cos(theta), 1, -sin(theta)));
-    }
-
-    // Bottom center
-    mesh.addVertex(vec3(0, -1, 0)); // vertex subdiv + 1
-
-    // Bottom outer ring -- vertices subdiv + 2 through 2 * subdiv + 1
-    for (int i{ 0 }; i < subdiv; i++)
-    {
-        double theta{ i * (2 * PI) / subdiv };
-        mesh.addVertex(vec3(cos(theta), -1, -sin(theta)));
-    }
-
-    // Start of index buffer: populate to form faces
-
-    // Top circle
-    int topRingStart{ 1 };
-    for (int i{ 0 }; i < subdiv; i++)
-    {
-        mesh.addIndex(0); // top center
-        mesh.addIndex(topRingStart + i);
-        mesh.addIndex(topRingStart + (i + 1) % subdiv);
-    }
-
-    // Bottom circle
-    int bottomRingStart{ subdiv + 2 };
-    for (int i{ 0 }; i < subdiv; i++)
-    {
-        mesh.addIndex(subdiv + 1); // bottom center
-
-        // Swap order from top circle so that the circle faces downwards instead of upwards.
-        mesh.addIndex(bottomRingStart + (i + 1) % subdiv);
-        mesh.addIndex(bottomRingStart + i);
-    }
-
-    // Sides
-    for (int i{ 0 }; i < subdiv; i++)
-    {
-        // Define the indices of a single quad
-        int indices[4]
-        {
-            topRingStart + i,
-            topRingStart + (i + 1) % subdiv,
-            bottomRingStart + i,
-            bottomRingStart + (i + 1) % subdiv
-        };
-
-        // build the quad
-        mesh.addIndex(indices[0]);
-        mesh.addIndex(indices[2]);
-        mesh.addIndex(indices[1]);
-        mesh.addIndex(indices[1]);
-        mesh.addIndex(indices[2]);
-        mesh.addIndex(indices[3]);
-    }
-
-    mesh.flatNormals();
-
-    for (size_t i{ 0 }; i < mesh.getNumNormals(); i++)
-    {
-        mesh.setNormal(i, -mesh.getNormal(i));
-    }
-}
-
-void buildSphere(ofMesh& mesh, int subdivTheta, int subdivPhi)
-{
-    using namespace glm;
-
-    // Populate with vertex positions.
-
-    // Top center (north pole)
-    mesh.addVertex(vec3(0, 1, 0)); // vertex 0
-
-    // Rings
-    // Start at i = 1 since i=0 is the north pole
-    for (int i{ 1 }; i < subdivTheta; i++)
-    {
-        double theta{ i * PI / subdivTheta };
-
-        for (int j{ 0 }; j < subdivPhi; j++)
-        {
-            double phi{ j * (2 * PI) / subdivPhi };
-
-            mesh.addVertex(vec3(sin(theta) * cos(phi), cos(theta), -sin(theta) * sin(phi)));
-        }
-    }
-
-    // Bottom center (south pole)
-    mesh.addVertex(vec3(0, -1, 0)); // vertex ???
-
-
-    // Start of index buffer: populate to form faces
-
-    // Top circle (around north pole)
-    for (int i{ 0 }; i < subdivPhi; i++)
-    {
-        int topRingStart{ 1 };
-
-        mesh.addIndex(0); // top center / north pole
-        mesh.addIndex(topRingStart + i);
-        mesh.addIndex(topRingStart + (i + 1) % subdivPhi);
-    }
-
-    int southPole{ (subdivTheta - 1) * subdivPhi + 1 };
-
-    // Bottom circle (around south pole)
-    for (int i{ 0 }; i < subdivPhi; i++)
-    {
-        int bottomRingStart{ southPole - subdivPhi };
-
-        mesh.addIndex(southPole); // bottom center / south pole
-
-        // Swap order from top circle so that the circle faces downwards instead of upwards.
-        mesh.addIndex(bottomRingStart + (i + 1) % subdivPhi);
-        mesh.addIndex(bottomRingStart + i);
-    }
-
-    // Sides
-    for (int i{ 0 }; i < subdivTheta - 2; i++)
-    {
-        for (int j{ 0 }; j < subdivPhi; j++)
-        {
-            int topRingStart{ 1 + subdivPhi * i };
-            int bottomRingStart{ 1 + subdivPhi * (i + 1) };
-
-            // Define the indices of a single quad
-            int indices[4]
-            {
-                topRingStart + j,
-                topRingStart + (j + 1) % subdivPhi,
-                bottomRingStart + j,
-                bottomRingStart + (j + 1) % subdivPhi
-            };
-
-            // build the quad
-            mesh.addIndex(indices[0]);
-            mesh.addIndex(indices[2]);
-            mesh.addIndex(indices[1]);
-            mesh.addIndex(indices[1]);
-            mesh.addIndex(indices[2]);
-            mesh.addIndex(indices[3]);
-        }
-    }
-
-    mesh.flatNormals();
-
-    for (size_t i{ 0 }; i < mesh.getNumNormals(); i++)
-    {
-        mesh.setNormal(i, -mesh.getNormal(i));
-    }
-}
-
-//--------------------------------------------------------------
-void ofApp::setup()
-=======
     // Northwest corner
     planeMesh.addVertex(vec3(0, height, 0));
     planeMesh.addTexCoord(vec2(0, 0));
@@ -283,6 +47,15 @@ void ofApp::reloadShaders()
     waterShader.load("shaders/mesh.vert", "shaders/water.frag");
     shadowShader.load("shaders/mesh.vert", "shaders/shadow.frag");
 
+    // Shadow stuff
+    directionalLightShader2.load("shaders/mesh.vert", "shaders/directionalLight2.frag");
+    //pointLightShader.load("shaders/my.vert", "shaders/pointLight.frag");
+    //spotLightShader.load("shaders/my.vert", "shaders/spotLight.frag");
+    planeShader.load("shaders/mesh.vert", "shaders/shadow2.frag");
+    //skyboxShader.load("shaders/skybox.vert", "shaders/skybox.frag");
+
+
+
     // Setup terrain shader uniform variables
     terrainShader.begin();
     terrainShader.setUniform3f("lightDir", normalize(vec3(1, 1, -1)));
@@ -292,6 +65,8 @@ void ofApp::reloadShaders()
     terrainShader.setUniform3f("meshColor", vec3(0.25, 0.5, 0.25));
     terrainShader.setUniformMatrix3f("normalMatrix", mat3());
     terrainShader.end();
+
+
 
     needsReload = false;
 }
@@ -318,7 +93,7 @@ void ofApp::setup()
     // Enable depth test, alpha blending, and face culling.
     ofEnableDepthTest();
     ofEnableAlphaBlending();
-    glEnable(GL_CULL_FACE);
+    //glEnable(GL_CULL_FACE);
 
     // Set sky color.
     ofSetBackgroundColor(186, 186, 255);
@@ -336,15 +111,19 @@ void ofApp::setup()
 
     // Load shield mesh
     shieldMesh.load("models/shield.ply");
+
+
+
     calcTangents(shieldMesh);
 
     // Load shield textures
     shieldDiffuse.load("textures/shield_diffuse.png");
     shieldNormal.load("textures/shield_normal.png");
-    shieldSpecular.load("textures/shield_spec.png");
+    //shieldSpecular.load("textures/shield_spec.png");
 
 
-
+        // building plane mesh for FBO stuff
+    buildPlaneMesh(20000.0, 20000.0, 752.475, planeMesh);
 
     // Initialize the camera.
     headAngle = radians(180.0f);
@@ -360,7 +139,7 @@ void ofApp::setup()
 
     // Set initial camera position.
     fpCamera.position = vec3((heightmap.getWidth() - 1) * 0.5f, 850, (heightmap.getHeight() - 1) * 0.5f);
-
+    //fpCamera.position = vec3(0, 752.475, 0);
     // Setup the world parameters.
     world.heightmap = &heightmap.getPixels();
     world.dimensions = vec3((heightmap.getWidth() - 1), heightmapScale, heightmap.getHeight() - 1);
@@ -400,6 +179,29 @@ void ofApp::setup()
     // Set character movement parameters
     characterWalkSpeed = 10 * charHeight; // much faster than realism for efficiently moving around the map
     //characterJumpSpeed = 10 * charHeight; // much higher than realism for efficiently moving around the map
+
+
+
+
+
+    // Shadow stuff
+    // Load shield mesh
+    shieldMesh.load("models/shield.ply");
+    calcTangents(shieldMesh);
+    // Load shield textures
+    shieldDiffuse.load("textures/shield_diffuse.png");
+    shieldNormal.load("textures/shield_normal.png");
+    shieldSpecular.load("textures/shield_spec.png");
+    // Allocate a 1024x1024 RGB+alpha framebuffer
+    ofFboSettings fboSettings{};
+    fboSettings.width = 1024;
+    fboSettings.height = 1024;
+    fboSettings.internalformat = GL_RGBA;
+    fboSettings.useDepth = true;
+    fboSettings.depthStencilAsTexture = true;
+    fbo.allocate(fboSettings);
+
+
 }
 
 //void ofApp::updateFPCamera(float dx, float dy)
@@ -460,6 +262,14 @@ void ofApp::update()
 
     // Load new cells if necessary:
     cellManager.optimizeForPosition(fpCamera.position);
+    //cout << fpCamera.position << endl;
+    //10281.8, 764.475, 8699.67
+
+
+    // Shield stuff
+    time += dt;
+    shieldPosition = vec3(10281.8 + sin(time), 752.475, 8699.67);
+
 }
 
 void drawMesh(const CameraMatrices& camMatrices,
@@ -467,57 +277,9 @@ void drawMesh(const CameraMatrices& camMatrices,
     const glm::vec3 ambientLight,
     ofShader& shader, ofMesh& mesh,
     glm::mat4 modelMatrix = glm::mat4{})
->>>>>>> Stashed changes
-{
-    ofDisableArbTex(); // IMPORTANT!
-
-    //ofEnableDepthTest();
-
-    glEnable(GL_CULL_FACE); // Enable face culling to test winding order
-
-    // Load shaders for the first time
-    reloadShaders();
-
-    // Load torus mesh
-    torusMesh.load("torus.ply");
-
-    ofShortImage heightmap{};
-    heightmap.setUseTexture(false);
-    // 641 x 513
-    heightmap.load("TamrielLowRes.png");
-    assert(heightmap.getWidth() != 0 && heightmap.getHeight() != 0);
-    //cout << heightmap.getColor(320, 200) << endl;
-
-<<<<<<< Updated upstream
-    // Build terrain mesh
-    buildTerrainMesh( terrainMesh, heightmap, 0, 0,
-    heightmap.getWidth() - 1, heightmap.getHeight() - 1,
-    glm::vec3(1, 50, 1));
-    
-    // Generate cube mesh
-    buildCube(cubeMesh);
-
-    // Generate circle mesh
-    buildCircle(circleMesh, 40);
-
-    // Generate cylinder mesh
-    buildCylinder(cylinderMesh, 8);
-
-    buildSphere(sphereMesh, 4, 8);
-}
-
-void ofApp::reloadShaders()
-{
-    shader.load("shader.vert", "shader.frag");
-    needsReload = false;
-}
-
-void ofApp::updateCameraRotation(float dx, float dy)
 {
     using namespace glm;
-    cameraHead += dx;
-    cameraPitch += dy;
-=======
+
     // assumes shader is already active
     shader.setUniform3f("cameraPosition", camMatrices.getCamera().position);
     shader.setUniform3f("lightDir", light.direction);
@@ -537,8 +299,8 @@ void ofApp::drawScene(CameraMatrices& camMatrices, int reflection)
 
     // Define the directional light
     DirectionalLight dirLight{ };
-    dirLight.direction = normalize(vec3(1, 1, 1));
-    dirLight.color = vec3(1, 1, 0);  // white light
+    dirLight.direction = normalize(vec3(1, 1, -1));
+    dirLight.color = vec3(1, 1, 0.5);  // white light
     dirLight.intensity = 1;
 
     //// Define the point light
@@ -555,66 +317,24 @@ void ofApp::drawScene(CameraMatrices& camMatrices, int reflection)
     //spotLight.color = vec3(1, 1, 1);  // white light
     //spotLight.intensity = 1;
 
-    directionalLightShader.begin();
+    directionalLightShader2.begin();
 
     // Set up the textures in advance
-    directionalLightShader.setUniformTexture("diffuseTex", shieldDiffuse, 0);
-    directionalLightShader.setUniformTexture("normalTex", shieldNormal, 1); // IMPORTANT: Use a different slot
-    directionalLightShader.setUniformTexture("specularTex", shieldSpecular, 2);
-    directionalLightShader.setUniform1f("shininess", 64.0);
-    directionalLightShader.setUniform1i("reflection", reflection);
+    directionalLightShader2.setUniformTexture("diffuseTex", shieldDiffuse, 0);
+    directionalLightShader2.setUniformTexture("normalTex", shieldNormal, 1); // IMPORTANT: Use a different slot
+    //directionalLightShader.setUniformTexture("specularTex", shieldSpecular, 2);
+    //directionalLightShader.setUniform1f("shininess", 64.0);
+    //directionalLightShader.setUniform1i("reflection", reflection);
     drawMesh(camMatrices, dirLight, vec3(0.0),
-        directionalLightShader, shieldMesh,
+        directionalLightShader2, shieldMesh,
         translate(vec3(shieldPosition)));
 
-    directionalLightShader.end();
->>>>>>> Stashed changes
-}
-
-//--------------------------------------------------------------
-void ofApp::update()
-{
-<<<<<<< Updated upstream
-    if (needsReload)
-    {
-        reloadShaders();
-    }
-
-    using namespace glm;
-
-    // calculate world space velocity
-    vec3 velocityWorldSpace{ mat3(rotate(-cameraHead, vec3(0, 1, 0)) * rotate(-cameraPitch, vec3(1, 0, 0))) * velocity};
-
-    // time since last frame
-    float dt{ static_cast<float>(ofGetLastFrameTime()) };
-
-    // update position
-    position += velocityWorldSpace * dt;
-
-    //cout << position << endl;
+    directionalLightShader2.end();
 }
 
 //--------------------------------------------------------------
 void ofApp::draw()
 {
-    using namespace glm;
-
-    float width{ static_cast<float>(ofGetViewportWidth()) };
-    float height{ static_cast<float>(ofGetViewportHeight()) };
-    float aspect{ width / height };
-
-    mat4 model{ rotate(radians(0.0f), vec3(1, 1, 1)) * scale(vec3(0.5, 0.5, 0.5)) };
-    mat4 view{ (rotate(cameraPitch, vec3(1, 0, 0)) * rotate(cameraHead, vec3(0, 1, 0))) * translate(-position) };
-    mat4 proj{ perspective(radians(90.0f), aspect, 0.01f, 20.0f) };
-
-    mat4 mvp{ proj * view * model };
-
-    shader.begin(); // start using the shader
-    shader.setUniformMatrix4f("mvp", mvp);
-    //cubeMesh.draw();
-    terrainMesh.draw();
-    shader.end(); // done with the shader
-=======
     float aspect { static_cast<float>(ofGetViewportWidth()) / static_cast<float>(ofGetViewportHeight()) };
 
     // Calculate an appropriate distance for a plane conceptually dividing the high level-of-detail close terrain and the lower level-of-detail distant terrain (or fog with no distant terrain).
@@ -677,20 +397,93 @@ void ofApp::draw()
     //mat4 modelView { view };
     //mat4 mvp { proj * view };
 
+
+    // Shadow stuff
+    mat4 spotShadowView = (lookAt(vec3(0, 2, 1), vec3(0, 1, 0), vec3(0, 1, 0)));
+    mat4 spotShadowProj = perspective((radians(90.0f)), aspect, nearPlane, midLODPlane);
+
+    // in lookAt, use spot light position for eye, position + direction for center, and (0,1,0) for up
+        //10281.8, 764.475, 8699.67
+
+    mat4 dirShadowView = lookAt(vec3(1, 1, -1) + fpCamera.position, fpCamera.position, vec3(0, 1, 0));
+    mat4 dirShadowProj = ortho(-50.0f, 50.0f, -50.0f, 50.0f, -50.0f, 50.0f);
+
+    // FBO camera
+    CameraMatrices dirFboCamMatrices{ dirShadowView, dirShadowProj };
+    CameraMatrices spotFboCamMatrices{ spotShadowView, spotShadowProj };
+    //camNearMatrices = dirFboCamMatrices;
+
+    fbo.begin();
+    ofClear(0, 0, 0, 0);
+    drawScene(dirFboCamMatrices, 0);
+    //drawScene(spotFboCamMatrices, 1);
+    fbo.end();
+
+
+    drawScene(camNearMatrices, 0);
+
+
+
+
     mat4 modelView { camNearMatrices.getView() };
     mat4 mvp { camNearMatrices.getProj() * camNearMatrices.getView() };
 
     // Near terrain
-    terrainShader.begin();
-    terrainShader.setUniform1f("startFade", midLODPlane * 0.75f);
-    terrainShader.setUniform1f("endFade", midLODPlane * 0.95f);
-    terrainShader.setUniformMatrix4f("modelView", modelView);
-    terrainShader.setUniformMatrix4f("mvp", mvp);
+    //terrainShader.begin();
+    //terrainShader.setUniform1f("startFade", midLODPlane * 0.75f);
+    //terrainShader.setUniform1f("endFade", midLODPlane * 0.95f);
+    //terrainShader.setUniformMatrix4f("modelView", modelView);
+    //terrainShader.setUniformMatrix4f("mvp", mvp);
+
+
+
+
+    planeShader.begin();
+
+    planeShader.setUniform1f("startFade", midLODPlane * 0.75f);
+    planeShader.setUniform1f("endFade", midLODPlane * 0.95f);
+    planeShader.setUniformMatrix4f("modelView", modelView);
+    planeShader.setUniformMatrix4f("mvp", mvp);
+    planeShader.setUniformTexture("diffuseTex", shieldDiffuse, 0);
+    planeShader.setUniformTexture("normalTex", shieldNormal, 1);
+
+    //planeShader.setUniform3f("spotLightPos", vec3(0, 2, 1));
+    //planeShader.setUniform3f("spotLightConeDir", vec3(0, -1, -1));
+    //planeShader.setUniform1f("spotLightCutoff", cos(radians(10.0f /* degrees */)));
+
+    //planeShader.setUniform3f("spotLightColor", vec3(0.9, 0.9, 0.9));
+    planeShader.setUniform3f("ambientColor", vec3(0.15, 0.15, 0.3));
+    planeShader.setUniform1f("gammaInv", 1.0f / 2.2f);
+    planeShader.setUniform3f("meshColor", vec3(0.25, 0.5, 0.25));
+
+
+    //dirLight.direction = normalize(vec3(1, 1, 1));
+    //dirLight.color = vec3(0.9, 0.9, 0.1);  // white light
+
+    planeShader.setUniform3f("dirLightDir", (vec3(1, 1, -1)));
+    planeShader.setUniform3f("dirLightColor", vec3(1, 1, 0.5));
+
+    planeShader.setUniform3f("cameraPos", camNearMatrices.getCamera().position);
+    planeShader.setUniformMatrix4f("mvp", camNearMatrices.getProj() * camNearMatrices.getView());
+    planeShader.setUniformMatrix4f("model", mat4());
+    planeShader.setUniformMatrix3f("normalMatrix", mat3());
+    planeShader.setUniform1f("lightType", 1);
+    planeShader.setUniformMatrix4f("shadowMatrix",
+        dirFboCamMatrices.getProj() * dirFboCamMatrices.getView());
+    //spotFboCamMatrices.getProj()* spotFboCamMatrices.getView());
+    planeShader.setUniform1f("lightType", 2);
+
+    planeShader.setUniformMatrix4f("shadowMatrix2",
+        spotFboCamMatrices.getProj() * spotFboCamMatrices.getView());
+    planeShader.setUniformTexture("fboTexture", fbo.getDepthTexture(), 0);
 
     // Draw the high level-of-detail cells.
     cellManager.drawActiveCells(fpCamera.position, midLODPlane);
+    //planeMesh.draw();
 
-    terrainShader.end();
+    planeShader.end();
+
+    //terrainShader.end();
 
     // Near water
     waterShader.begin();
@@ -710,7 +503,6 @@ void ofApp::exit()
 {
     cellManager.stop();
     controller.exit();
->>>>>>> Stashed changes
 }
 
 //--------------------------------------------------------------
@@ -718,21 +510,6 @@ void ofApp::keyPressed(int key)
 {
     if (key == 'w')
     {
-<<<<<<< Updated upstream
-        velocity.z = -1;
-    }
-    else if (key == 's')
-    {
-        velocity.z = 1;
-    }
-    else if (key == 'a')
-    {
-        velocity.x = -1;
-    }
-    else if (key == 'd')
-    {
-        velocity.x = 1;
-=======
         wasdVelocity.z = -50;
     }
     else if (key == 's')
@@ -752,21 +529,10 @@ void ofApp::keyPressed(int key)
     else if (key == 'f')
     {
         wasdVelocity.y = -50;
->>>>>>> Stashed changes
-    }
-
-    // Added R and F to go up and down, relative to where the camera is pointing
-    else if (key == 'f')
-    {
-        velocity.y = -1;
     }
     else if (key == 'r')
     {
-<<<<<<< Updated upstream
-        velocity.y = 1;
-=======
         wasdVelocity.y = 50;
->>>>>>> Stashed changes
     }
 
     // Allowing the user to disable mouseMovement with E
@@ -775,22 +541,6 @@ void ofApp::keyPressed(int key)
         allowMouseMovement = !allowMouseMovement;
     }
 
-<<<<<<< Updated upstream
-//--------------------------------------------------------------
-void ofApp::keyReleased(int key)
-{
-    if (key == 'w' || key == 's')
-    {
-        velocity.z = 0;
-    }
-    else if (key == 'a' || key == 'd')
-    {
-        velocity.x = 0;
-    }
-    else if (key == 'f' || key == 'r')
-    {
-        velocity.y = 0;
-=======
     if (key == '`')
     {
         needsReload = true;
@@ -811,40 +561,25 @@ void ofApp::keyReleased(int key)
     else if (key == 'f' || key == 'r')
     {
         wasdVelocity.y = 0;
->>>>>>> Stashed changes
     }
 }
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y)
 {
-<<<<<<< Updated upstream
-    if (allowMouseMovement)
-    {
-        if (prevX != 0 && prevY != 0)
+    if (allowMouseMovement) {
+        if (prevMouseX != 0 && prevMouseY != 0)
         {
-            // Update camera rotation based on mouse movement
-            updateCameraRotation(mouseSensitivity * (x - prevX), mouseSensitivity * (y - prevY));
+            // Previous mouse position has been initialized.
+            // Calculate dx and dy
+            int dx = x - prevMouseX;
+            int dy = y - prevMouseY;
+
+            updateCameraRotation(camSensitivity * dx, camSensitivity * dy);
         }
     }
-
-    // Remember where the mouse was this frame.
-    prevX = x;
-    prevY = y;
-=======
-    if (prevMouseX != 0 && prevMouseY != 0)
-    {
-        // Previous mouse position has been initialized.
-        // Calculate dx and dy
-        int dx = x - prevMouseX;
-        int dy = y - prevMouseY;
-
-        updateCameraRotation(camSensitivity * dx, camSensitivity * dy);
-    }
-
     prevMouseX = x;
     prevMouseY = y;
->>>>>>> Stashed changes
 }
 
 //--------------------------------------------------------------

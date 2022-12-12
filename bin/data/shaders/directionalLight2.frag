@@ -48,16 +48,17 @@ out vec4 outColor;
 
 void main()
 {
+    vec3 diffuseColor = pow(texture(diffuseTex, fragUV).rgb, vec3(2.2));
+
     // Re-normalize the normal vector after rasterization.
-    vec3 normal = normalize(fragNormal);
-
+    vec3 tsNormal = texture(normalTex, fragUV).xyz * 2 - 1;
+    vec3 wsNormal = normalize(TBN * tsNormal);
     // Calculate diffuse lighting.
-    float lightAmount = max(0.0, dot(normal, lightDir));
-    vec3 fragLight = lightColor * lightAmount + ambientColor;
     
-    // Calculate fade-out.
-    float alpha = 1.0 - smoothstep(startFade, endFade, length(fragCamSpacePos));
+    float nDotL = max(0.0, dot(wsNormal, lightDir));
 
-    // Apply lighting and gamma correction.
-    outColor = vec4(pow(meshColor * fragLight, vec3(gammaInv)), alpha);
+    vec3 irradiance = ambientColor + lightColor * nDotL;
+
+    outColor = vec4(pow(diffuseColor.rgb * irradiance, vec3(1.0 / 2.2)), 1.0);
+
 }

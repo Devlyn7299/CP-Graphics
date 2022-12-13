@@ -64,11 +64,15 @@ void ofApp::setup()
 
     // Load shield mesh
     shieldMesh.load("models/shield.ply");
-    swordMesh.load("models/sword.ply");
-    staffMesh.load("models/Staff.ply");
+    staffMesh.load("models/staff.ply");
+    jarMesh.load("models/jar.ply");
+    coneMesh.load("models/cone.ply");
+    cube.load("models/cube.ply");
+    cylinderMesh.load("models/cylinder.ply");
+    sphereMesh.load("models/sphere.ply");
+    torusMesh.load("models/torus.ply");
     //cupMesh.load("models/NewTest.ply");
     calcTangents(shieldMesh);
-    calcTangents(swordMesh);
     calcTangents(staffMesh);
     //calcTangents(cupMesh);
 
@@ -145,6 +149,8 @@ void ofApp::update()
 
     time += dt;
     shieldPosition = vec3(sin(time), 1, 0);
+    staffPosition = vec3(2*sin(time), 0, 1);
+    cylinderPosition = vec3(-3, 1, -sin(time));
 }
 
 void drawMesh(const CameraMatrices& camMatrices, 
@@ -265,6 +271,7 @@ void ofApp::drawScene(CameraMatrices& camMatrices, int reflection)
     dirLight.direction = normalize(vec3(1, 1, 1));
     dirLight.color = vec3(0.9, 0.9, 0.1);  // white light
     dirLight.intensity = 1;
+    dirLightIntensity = dirLight.intensity;
 
     // Define the point light
     PointLight pointLight { };
@@ -274,12 +281,14 @@ void ofApp::drawScene(CameraMatrices& camMatrices, int reflection)
 
     // Define the spot light
     SpotLight spotLight { };
-    spotLight.position = vec3(0, 2, 1);
+    spotLight.position = vec3(0, 2, 2);
     spotLight.direction = vec3(0, -1, -1);
-    spotLight.cutoff = cos(radians(10.0f /* degrees */));
+    spotLight.cutoff = cos(radians(30.0f /* degrees */));
     spotLight.color = vec3(0.9, 0.9, 0.9);  // blue light
-    spotLight.intensity = 10;
-
+    spotLight.intensity = 5;
+    spotLightIntensity = spotLight.intensity;
+    spotLightPos = spotLight.position;
+    spotLightDir = spotLight.direction;
 
     directionalLightShader.begin();
     // Set up the textures in advance
@@ -296,9 +305,26 @@ void ofApp::drawScene(CameraMatrices& camMatrices, int reflection)
     //    translate(vec3(shieldPosition)));
     
     // Main camera
+    if (isShieldDrawn)
     drawMesh(camMatrices, spotLight, dirLight, vec3(0.10),
         directionalLightShader, shieldMesh,
         translate(vec3(shieldPosition)));
+    if (isStaffDrawn)
+    drawMesh(camMatrices, spotLight, dirLight, vec3(0.0),
+        directionalLightShader, staffMesh,
+        translate(vec3(staffPosition)));
+    if (isConeDrawn)
+    drawMesh(camMatrices, spotLight, dirLight, vec3(0.0),
+        directionalLightShader, coneMesh,
+        translate(vec3(conePosition)));
+    if (isCylinderDrawn)
+    drawMesh(camMatrices, spotLight, dirLight, vec3(0.0),
+        directionalLightShader, cylinderMesh,
+        translate(vec3(cylinderPosition)));
+    if (isTorusDrawn)
+    drawMesh(camMatrices, spotLight, dirLight, vec3(0.0),
+        directionalLightShader, torusMesh,
+        translate(vec3(torusPosition)));
     
     directionalLightShader.end();
 
@@ -309,6 +335,8 @@ void ofApp::drawScene(CameraMatrices& camMatrices, int reflection)
 //--------------------------------------------------------------
 void ofApp::draw()
 {
+
+
     using namespace glm;
 
     float width { static_cast<float>(ofGetViewportWidth()) };
@@ -317,12 +345,12 @@ void ofApp::draw()
     float nearPlane = 1.0f;
     float farPlane = 20.0f;
 
-    mat4 spotShadowView = (lookAt(vec3(0, 2, 1), vec3(0, 1, 0), vec3(0, 1, 0)));
+    mat4 spotShadowView = (lookAt(spotLightPos, spotLightPos + spotLightDir, vec3(0, 1, 0)));
     mat4 spotShadowProj = perspective((radians(90.0f)), aspect, nearPlane, farPlane);
 
     // in lookAt, use spot light position for eye, position + direction for center, and (0,1,0) for up
     mat4 dirShadowView = mat4(mat3(lookAt(vec3(1, 1, 1), vec3(0, 0, 0), vec3(0, 1, 0))));
-    mat4 dirShadowProj = ortho(-5.0f, 5.0f, -5.0f, 5.0f, -20.0f, 20.0f);
+    mat4 dirShadowProj = ortho(-4.0f, 4.0f, -4.0f, 4.0f, -100.0f, 100.0f);
 
     // FBO camera
     CameraMatrices dirFboCamMatrices{ dirShadowView, dirShadowProj };
@@ -359,18 +387,13 @@ void ofApp::draw()
     planeShader.setUniformTexture("normalTex", shieldNormal, 1);
     planeShader.setUniform3f("ambientColor", vec3(0.25));
 
-    planeShader.setUniform3f("spotLightPos", vec3(0, 2, 1));
-    planeShader.setUniform3f("spotLightConeDir", vec3(0, -1, -1));
+    planeShader.setUniform3f("spotLightPos", spotLightPos);
+    planeShader.setUniform3f("spotLightConeDir", spotLightDir);
     planeShader.setUniform1f("spotLightCutoff", cos(radians(10.0f)));
-    planeShader.setUniform3f("spotLightColor", vec3(0.9, 0.9, 0.9));
-
-    //planeShader.setUniform3f("spotLightPos", vec3(0, 0, 0));
-    //planeShader.setUniform3f("spotLightConeDir", vec3(0, 0, 0));
-    //planeShader.setUniform1f("spotLightCutoff", cos(radians(0.0f)));
-    //planeShader.setUniform3f("spotLightColor", vec3(0, 0, 0));
+    planeShader.setUniform3f("spotLightColor", vec3(0.9, 0.9, 0.9) * spotLightIntensity);
 
     planeShader.setUniform3f("dirLightDir", normalize(vec3(1, 1, 1)));
-    planeShader.setUniform3f("dirLightColor", vec3(0.9, 0.9, 0.1));
+    planeShader.setUniform3f("dirLightColor", vec3(0.9, 0.9, 0.1) * dirLightIntensity);
 
     planeShader.setUniform3f("cameraPos", camMatrices.getCamera().position);
     planeShader.setUniformMatrix4f("mvp", camMatrices.getProj()* camMatrices.getView());
@@ -435,6 +458,26 @@ void ofApp::keyPressed(int key)
         // Backwards motion
         // Converting from camera space velocity to world space velocity
         velocity.y = -1;
+    }
+    if (key == '1')
+    {
+        isShieldDrawn = !isShieldDrawn;
+    }
+    if (key == '2')
+    {
+        isStaffDrawn = !isStaffDrawn;
+    }
+    if (key == '3')
+    {
+        isConeDrawn = !isConeDrawn;
+    }
+    if (key == '4')
+    {
+        isCylinderDrawn = !isCylinderDrawn;
+    }
+    if (key == '5')
+    {
+        isTorusDrawn = !isTorusDrawn;
     }
 }
 

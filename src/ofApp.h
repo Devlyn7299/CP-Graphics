@@ -37,14 +37,22 @@ private:
 	// Mesh of a shield
 	ofMesh shieldMesh;
 
-	ofMesh swordMesh;
-	glm::vec3 swordPosition{ 0, 1, 3 };
-
 	ofMesh staffMesh;
-	glm::vec3 staffPosition{ 3, 0, 0 };
+	ofMesh jarMesh;
+	ofMesh coneMesh;
+	ofMesh cube;
+	ofMesh cylinderMesh;
+	ofMesh sphereMesh;
+	ofMesh torusMesh;
 
-	ofMesh cupMesh;
-	glm::vec3 cupPosition{ 0, 1, 0 };
+	//ofMesh swordMesh;
+	//glm::vec3 swordPosition{ 0, 1, 3 };
+
+	//ofMesh staffMesh;
+	//glm::vec3 staffPosition{ 3, 0, 0 };
+
+	//ofMesh cupMesh;
+	//glm::vec3 cupPosition{ 0, 1, 0 };
 
 	// diffuse (color) texture
 	ofImage shieldDiffuse;
@@ -99,6 +107,21 @@ private:
 	float time { 0 };
 	glm::vec3 shieldPosition {0, 1, 0};
 
+	glm::vec3 staffPosition{ 0, 1, 0 };
+	glm::vec3 jarPosition{ 0, 1, 0 };
+	glm::vec3 conePosition{ 0, 1, 0 };
+	glm::vec3 cubePosition{ 0, 1, 0 };
+	glm::vec3 cylinderPosition{ -3, 1, 0 };
+	glm::vec3 spherePosition{ 0, 1, 0 };
+	glm::vec3 torusPosition{ 2.5, 1, -0.5 };
+
+	bool isShieldDrawn{ true };
+	bool isStaffDrawn{ true };
+	bool isConeDrawn{ true };
+	bool isCylinderDrawn{ true };
+	bool isTorusDrawn{ true };
+
+
 	// Plane shader
 	ofShader planeShader {};
 
@@ -116,4 +139,9 @@ private:
 
 	// Draws the FPS and frame time on the screen
 	void drawFrameTime();
+
+	float dirLightIntensity;
+	float spotLightIntensity;
+	glm::vec3 spotLightDir;
+	glm::vec3 spotLightPos;
 };

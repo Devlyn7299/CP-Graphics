@@ -163,6 +163,7 @@ private:
     // Animate shield position
     float time{ 0 };
     glm::vec3 shieldPosition{ 0, 1, 0 };
+    glm::vec3 bigStaffPosition{ 0, 1, 0 };
 
     // Reloads the shaders while the application is running.
     void reloadShaders();
@@ -197,7 +198,7 @@ private:
     ofShader spotLightShader;
 
     // Mesh of a shield
-    ofMesh shieldMesh2;
+    ofMesh bigStaffMesh;
 
     ofMesh staffMesh;
     ofMesh jarMesh;

@@ -189,8 +189,8 @@ void ofAppTerrain::setup()
 
     // Shadow stuff
     // Load shield mesh
-    shieldMesh.load("models/shield.ply");
-    calcTangents(shieldMesh);
+    bigStaffMesh.load("models/bigStaff.ply");
+    calcTangents(bigStaffMesh);
     // Load shield textures
     shieldDiffuse.load("textures/shield_diffuse.png");
     shieldNormal.load("textures/shield_normal.png");
@@ -271,7 +271,7 @@ void ofAppTerrain::update()
 
     // Shield stuff
     time += dt;
-    shieldPosition = vec3(10281.8 + sin(time), 752.475, 8699.67);
+    bigStaffPosition = vec3(10281.8 + sin(time), 752.475, 8699.67);
 
 }
 
@@ -329,8 +329,8 @@ void ofAppTerrain::drawScene(CameraMatrices& camMatrices, int reflection)
     //directionalLightShader.setUniform1f("shininess", 64.0);
     //directionalLightShader.setUniform1i("reflection", reflection);
     drawMesh(camMatrices, dirLight, vec3(0.0),
-        directionalLightShader2, shieldMesh,
-        translate(vec3(shieldPosition)));
+        directionalLightShader2, bigStaffMesh,
+        translate(vec3(bigStaffPosition)));
 
     directionalLightShader2.end();
 }
@@ -411,7 +411,7 @@ void ofAppTerrain::draw()
         //10281.8, 764.475, 8699.67
 
     mat4 dirShadowView = lookAt(vec3(1, 1, -1) + fpCamera.position, fpCamera.position, vec3(0, 1, 0));
-    mat4 dirShadowProj = ortho(-10.0f, 10.0f, -10.0f, 10.0f, -100.0f, 100.0f);
+    mat4 dirShadowProj = ortho(-10.0f, 10.0f, -10.0f, 10.0f, -500.0f, 500.0f);
     mat4 dirShadowProjClose = ortho(-5.0f, 5.0f, -5.0f, 5.0f, -50.0f, 50.0f);
 
     // FBO camera

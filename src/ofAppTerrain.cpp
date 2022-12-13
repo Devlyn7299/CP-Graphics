@@ -1,16 +1,13 @@
-#include "ofApp.h"
+#include "ofAppTerrain.h"
 #include "CameraMatrices.h"
 #include "GLFW/glfw3.h"
 #include "buildTerrainMesh.h"
 #include "calcTangents.h"
 #include "DirectionalLight.h"
-#include "ofAppPlane.h"
-#include "ofAppTerrain.h"
 
 using namespace glm;
-ofAppPlane ofPlane;
 
-void buildPlaneMesh(float width, float depth, float height, ofMesh& planeMesh)
+void ofAppTerrain::buildPlaneMesh(float width, float depth, float height, ofMesh& planeMesh)
 {
     // Northwest corner
     planeMesh.addVertex(vec3(0, height, 0));
@@ -43,9 +40,8 @@ void buildPlaneMesh(float width, float depth, float height, ofMesh& planeMesh)
     planeMesh.addIndex(3);
 }
 
-void ofApp::reloadShaders()
+void ofAppTerrain::reloadShaders()
 {
-    ofPlane.reloadShaders();
     directionalLightShader.load("shaders/mesh.vert", "shaders/directionalLight.frag");
     terrainShader.load("shaders/mesh.vert", "shaders/directionalLight.frag");
     waterShader.load("shaders/mesh.vert", "shaders/water.frag");
@@ -75,7 +71,7 @@ void ofApp::reloadShaders()
     needsReload = false;
 }
 
-void ofApp::updateCameraRotation(float dx, float dy)
+void ofAppTerrain::updateCameraRotation(float dx, float dy)
 {
     using namespace glm;
 
@@ -87,7 +83,7 @@ void ofApp::updateCameraRotation(float dx, float dy)
 }
 
 //--------------------------------------------------------------
-void ofApp::setup()
+void ofAppTerrain::setup()
 {
     using namespace glm;
 
@@ -108,7 +104,7 @@ void ofApp::setup()
     // Initialize Xbox controller handle
     controller.setup();
 
-    auto window { ofGetCurrentWindow() };
+    auto window{ ofGetCurrentWindow() };
 
     // Uncomment the following line to let GLFW take control of the cursor so we have unlimited cursor space
     // glfwSetInputMode(dynamic_pointer_cast<ofAppGLFWWindow>(window)->getGLFWWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -156,13 +152,13 @@ void ofApp::setup()
     cout << "Downscaling heightmap for far LOD..." << endl;
 
     // Load a low resolution heightmap for distant land.
-    ofShortImage heightmapFarLOD { heightmap };
+    ofShortImage heightmapFarLOD{ heightmap };
     heightmapFarLOD.setUseTexture(false);
     heightmapFarLOD.load(config.loResName);
 
     // Establish scale between high-res and low-res.
     float farLODScale{ (heightmap.getHeight() - 1) / (heightmapFarLOD.getHeight() - 1) };
-    
+
     // Build a single distant terrain mesh.
     cout << "Building distant terrain..." << endl;
     buildTerrainMesh(farTerrain, heightmapFarLOD, 0, 0, heightmapFarLOD.getWidth() - 1, heightmapFarLOD.getHeight() - 1, vec3(farLODScale, heightmapScale, farLODScale));
@@ -235,16 +231,16 @@ void ofApp::setup()
 //}
 
 //--------------------------------------------------------------
-void ofApp::update()
+void ofAppTerrain::update()
 {
     // Make sure that jump doesn't get spammed while the button is being held down.
-    bool previousJumpState { controller.getGamepad(0).a };
+    bool previousJumpState{ controller.getGamepad(0).a };
 
     controller.update();
 
-    Gamepad gamepad { controller.getGamepad(0) };
+    Gamepad gamepad{ controller.getGamepad(0) };
 
-    mat3 headRotationMatrix { rotate(headAngle, vec3(0, 1, 0)) };
+    mat3 headRotationMatrix{ rotate(headAngle, vec3(0, 1, 0)) };
 
     float dt{ static_cast<float>(ofGetLastFrameTime()) };
 
@@ -260,7 +256,7 @@ void ofApp::update()
         // Reload shaders if the hotkey was pressed.
         reloadShaders();
     }
-    
+
     // Advance character physics.
     //character.update(ofGetLastFrameTime());
 
@@ -279,11 +275,11 @@ void ofApp::update()
 
 }
 
-void drawMesh(const CameraMatrices& camMatrices,
+void ofAppTerrain::drawMesh(const CameraMatrices& camMatrices,
     const DirectionalLight& light,
     const glm::vec3 ambientLight,
     ofShader& shader, ofMesh& mesh,
-    glm::mat4 modelMatrix = glm::mat4{})
+    glm::mat4 modelMatrix)
 {
     using namespace glm;
 
@@ -300,7 +296,7 @@ void drawMesh(const CameraMatrices& camMatrices,
     mesh.draw();
 }
 
-void ofApp::drawScene(CameraMatrices& camMatrices, int reflection)
+void ofAppTerrain::drawScene(CameraMatrices& camMatrices, int reflection)
 {
     using namespace glm;
 
@@ -340,23 +336,23 @@ void ofApp::drawScene(CameraMatrices& camMatrices, int reflection)
 }
 
 //--------------------------------------------------------------
-void ofApp::draw()
+void ofAppTerrain::draw()
 {
-    float aspect { static_cast<float>(ofGetViewportWidth()) / static_cast<float>(ofGetViewportHeight()) };
+    float aspect{ static_cast<float>(ofGetViewportWidth()) / static_cast<float>(ofGetViewportHeight()) };
 
     // Calculate an appropriate distance for a plane conceptually dividing the high level-of-detail close terrain and the lower level-of-detail distant terrain (or fog with no distant terrain).
-    float midLODPlane { length(vec2(
+    float midLODPlane{ length(vec2(
         0.5f * NEAR_LOD_SIZE * NEAR_LOD_RANGE,
         fpCamera.position.y - world.getTerrainHeightAtPosition(fpCamera.position))) };
     cout << midLODPlane << endl;
     midLODPlane = 250;
 
     // Calculate an appropriate far plane for the distant terrain.
-    float farPlaneDistant { 0.25f * heightmap.getWidth() };
+    float farPlaneDistant{ 0.25f * heightmap.getWidth() };
 
     // Calculate view and projection matrices for the distant terrain.
     // Set the clipping plane to be 25% of the dividing plane to allow for sufficient overlap for a smooth transition.
-    CameraMatrices camFarMatrices { fpCamera, aspect, midLODPlane * 0.25f, farPlaneDistant };
+    CameraMatrices camFarMatrices{ fpCamera, aspect, midLODPlane * 0.25f, farPlaneDistant };
 
     // Disable depth clamping for distant terrain
     glDisable(GL_DEPTH_CLAMP);
@@ -366,7 +362,7 @@ void ofApp::draw()
     terrainShader.setUniform1f("startFade", farPlaneDistant * 0.95f);
     terrainShader.setUniform1f("endFade", farPlaneDistant * 1.0f);
     terrainShader.setUniformMatrix4f("modelView", camFarMatrices.getView());
-    terrainShader.setUniformMatrix4f("mvp", camFarMatrices.getProj()* camFarMatrices.getView());
+    terrainShader.setUniformMatrix4f("mvp", camFarMatrices.getProj() * camFarMatrices.getView());
 
     // Draw the static distant terrain mesh.
     farTerrainVBO.drawElements(GL_TRIANGLES, farTerrainVBO.getNumIndices());
@@ -383,7 +379,7 @@ void ofApp::draw()
     waterShader.setUniform1f("startFade", farPlaneDistant * 0.95f);
     waterShader.setUniform1f("endFade", farPlaneDistant * 1.0f);
     waterShader.setUniformMatrix4f("modelView", camFarMatrices.getView());
-    waterShader.setUniformMatrix4f("mvp", camFarMatrices.getProj()* camFarMatrices.getView());
+    waterShader.setUniformMatrix4f("mvp", camFarMatrices.getProj() * camFarMatrices.getView());
 
     // Draw the water plane.
     waterPlane.draw();
@@ -396,7 +392,7 @@ void ofApp::draw()
     float nearPlane = -world.gravity * 0.01f; // Define near plane relative to world gravity (which is also proportional to player character height)
 
     // Calculate view and projection matrices for the close terrain.
-    CameraMatrices camNearMatrices { fpCamera, aspect, nearPlane, midLODPlane };
+    CameraMatrices camNearMatrices{ fpCamera, aspect, nearPlane, midLODPlane };
 
     //// Debugging matrices:
     //midLODPlane = 100000; // to push back fog
@@ -438,8 +434,8 @@ void ofApp::draw()
 
 
 
-    mat4 modelView { camNearMatrices.getView() };
-    mat4 mvp { camNearMatrices.getProj() * camNearMatrices.getView() };
+    mat4 modelView{ camNearMatrices.getView() };
+    mat4 mvp{ camNearMatrices.getProj() * camNearMatrices.getView() };
 
     // Near terrain
     //terrainShader.begin();
@@ -514,14 +510,14 @@ void ofApp::draw()
 
 }
 
-void ofApp::exit()
+void ofAppTerrain::exit()
 {
     cellManager.stop();
     controller.exit();
 }
 
 //--------------------------------------------------------------
-void ofApp::keyPressed(int key)
+void ofAppTerrain::keyPressed(int key)
 {
     if (key == 'w')
     {
@@ -563,7 +559,7 @@ void ofApp::keyPressed(int key)
 }
 
 //--------------------------------------------------------------
-void ofApp::keyReleased(int key)
+void ofAppTerrain::keyReleased(int key)
 {
     if (key == 'w' || key == 's')
     {
@@ -580,7 +576,7 @@ void ofApp::keyReleased(int key)
 }
 
 //--------------------------------------------------------------
-void ofApp::mouseMoved(int x, int y)
+void ofAppTerrain::mouseMoved(int x, int y)
 {
     if (allowMouseMovement) {
         if (prevMouseX != 0 && prevMouseY != 0)
@@ -598,49 +594,49 @@ void ofApp::mouseMoved(int x, int y)
 }
 
 //--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button)
+void ofAppTerrain::mouseDragged(int x, int y, int button)
 {
 }
 
 //--------------------------------------------------------------
-void ofApp::mousePressed(int x, int y, int button)
+void ofAppTerrain::mousePressed(int x, int y, int button)
 {
 }
 
 //--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button)
+void ofAppTerrain::mouseReleased(int x, int y, int button)
 {
 }
 
 //--------------------------------------------------------------
-void ofApp::mouseEntered(int x, int y)
+void ofAppTerrain::mouseEntered(int x, int y)
 {
 }
 
 //--------------------------------------------------------------
-void ofApp::mouseExited(int x, int y)
+void ofAppTerrain::mouseExited(int x, int y)
 {
 }
 
 //--------------------------------------------------------------
-void ofApp::windowResized(int w, int h)
-{
-
-}
-
-//--------------------------------------------------------------
-void ofApp::gotMessage(ofMessage msg)
+void ofAppTerrain::windowResized(int w, int h)
 {
 
 }
 
 //--------------------------------------------------------------
-void ofApp::dragEvent(ofDragInfo dragInfo)
+void ofAppTerrain::gotMessage(ofMessage msg)
 {
 
 }
 
-void ofApp::drawFrameTime()
+//--------------------------------------------------------------
+void ofAppTerrain::dragEvent(ofDragInfo dragInfo)
+{
+
+}
+
+void ofAppTerrain::drawFrameTime()
 {
     glDisable(GL_CULL_FACE);
     std::string frameTimeStr{

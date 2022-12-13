@@ -8,11 +8,12 @@
 #include "ofxXboxController.h"
 #include "CameraMatrices.h"
 #include "ofxCubemap.h"
-#include "ofAppPlane.h"
+#include "PointLight.h"
+#include "SpotLight.h"
+#include "DirectionalLight.h"
 
 
-
-struct HeightmapConfig
+struct HeightmapConfig3
 {
 public:
     std::string hiResName;
@@ -22,7 +23,7 @@ public:
     float gravity;
 };
 
-class ofApp : public ofBaseApp
+class ofAppTerrain : public ofBaseApp
 {
 public:
     void setup();
@@ -42,34 +43,40 @@ public:
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
 
-private:
-    ofAppPlane appPlane;
+    void buildPlaneMesh(float width, float depth, float height, ofMesh& planeMesh);
 
+    void drawMesh(const CameraMatrices& camMatrices,
+        const DirectionalLight& light,
+        const glm::vec3 ambientLight,
+        ofShader& shader, ofMesh& mesh,
+        glm::mat4 modelMatrix = glm::mat4{});
+
+private:
     // The number of quads in each row and column of a single terrain cell for the close, high level-of-detail terrain.
-    const static unsigned int NEAR_LOD_SIZE { 256 };
+    const static unsigned int NEAR_LOD_SIZE{ 256 };
 
     // The number of cells beyond the current cell that the cell manager loads for the close, high level-of-detail terrain.
-    const static unsigned int NEAR_LOD_RANGE { 4 };
+    const static unsigned int NEAR_LOD_RANGE{ 4 };
 
-    const HeightmapConfig tamriel { "TamrielBeta_10_2016_01.png", "TamrielLowRes.png", 1600.0f, 0.4375f, 0.05f };
-    //const HeightmapConfig random { "RandomHiRes.png", "RandomLowRes.png", 800.0f, 0.5f, 0.1f };
+    const HeightmapConfig3 tamriel{ "TamrielBeta_10_2016_01.png", "TamrielLowRes.png", 1600.0f, 0.4375f, 0.05f };
+    //const HeightmapConfig3 random { "RandomHiRes.png", "RandomLowRes.png", 800.0f, 0.5f, 0.1f };
 
-    HeightmapConfig config{ tamriel };
+    HeightmapConfig3 config{ tamriel };
 
     // The vertical scale of the heightmap.  Used to convert the pixel values in the heightmap to physical height units.
-    float heightmapScale { config.scale };
+    float heightmapScale{ config.scale };
 
     // Non-GPU image containing the heightmap.
-    ofShortImage heightmap {};
+    ofShortImage heightmap{};
 
     // Plane mesh for rendering water.
-    ofMesh waterPlane {};
+    ofMesh waterPlane{};
 
     // Shader for rendering terrain.
-    ofShader terrainShader {};
+    ofShader terrainShader{};
 
     // Shader for rendering water.
-    ofShader waterShader {};
+    ofShader waterShader{};
 
     // Shader for a directional light
     ofShader directionalLightShader;
@@ -80,10 +87,10 @@ private:
     ofShader shadowShader{};
 
     // The main game "world" that uses the heightmap.
-    World world {};
+    World world{};
 
     // A cell manager for the high level-of-detail close terrain.
-    CellManager<NEAR_LOD_RANGE + 1> cellManager { heightmap, heightmapScale, NEAR_LOD_SIZE };
+    CellManager<NEAR_LOD_RANGE + 1> cellManager{ heightmap, heightmapScale, NEAR_LOD_SIZE };
 
 
     // Mesh of a shield
@@ -105,23 +112,23 @@ private:
     ofFbo fbo{};
 
     // A single terrain mesh. Uncomment the following line if not using a cell manager.
-    ofMesh farTerrain {};
-    ofVbo farTerrainVBO {};
+    ofMesh farTerrain{};
+    ofVbo farTerrainVBO{};
 
     // Set to true when the shader reload hotkey is pressed.
-    bool needsReload { true };
+    bool needsReload{ true };
 
     // The first-person camera.
-    Camera fpCamera {};
+    Camera fpCamera{};
 
     // The helper object for physics calculations related to the first person character.
     //CharacterPhysics character { world };
 
     // The camera's "look" sensitivity when using the mouse.
-    float camSensitivity { 0.02f };
+    float camSensitivity{ 0.02f };
 
     // The camera's "look" sensitivity when using an Xbox controller.
-    float xboxCamSensitivity { 7.0f };
+    float xboxCamSensitivity{ 7.0f };
 
     // The character's walk speed (will be calculated based on the world's gravity).
     float characterWalkSpeed;
@@ -130,19 +137,19 @@ private:
     float characterJumpSpeed;
 
     // The first-person camera's head rotation.
-    float headAngle { 0 };
+    float headAngle{ 0 };
 
     // The first-person camera's pitch angle.
-    float pitchAngle { 0 };
+    float pitchAngle{ 0 };
 
     // The mouse's previous x-coordinate; used for mouse camera controls.
-    int prevMouseX { 0 };
+    int prevMouseX{ 0 };
 
     // The mouse's previous y-coordinate; used for mouse camera controls.
-    int prevMouseY { 0 };
+    int prevMouseY{ 0 };
 
     // The local character velocity based on which of the WASD keys are pressed; needs to be transformed from local space to world space.
-    glm::vec3 wasdVelocity { 0 };
+    glm::vec3 wasdVelocity{ 0 };
 
     // Plane mesh
     //ofMesh planeMesh{};

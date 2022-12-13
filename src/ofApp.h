@@ -121,6 +121,7 @@ private:
 	bool isCylinderDrawn{ true };
 	bool isTorusDrawn{ true };
 
+	bool allowMouseMovement{ true };
 
 	// Plane shader
 	ofShader planeShader {};

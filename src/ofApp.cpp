@@ -9,7 +9,6 @@ void buildPlaneMesh(float width, float depth, float height, ofMesh& planeMesh)
 {
     using namespace glm;
 
-    ofSetVerticalSync(false);
 
     // Northwest corner
     planeMesh.addVertex(vec3(-width, height, -depth));
@@ -46,6 +45,8 @@ void buildPlaneMesh(float width, float depth, float height, ofMesh& planeMesh)
 void ofApp::setup()
 {
     using namespace glm;
+
+    ofSetVerticalSync(false);
 
     ofDisableArbTex(); // IMPORTANT!
 
@@ -111,12 +112,14 @@ void ofApp::setup()
 
 void ofApp::reloadShaders()
 {
-    directionalLightShader.load("shaders/my.vert", "shaders/directionalLight.frag");
-    pointLightShader.load("shaders/my.vert", "shaders/pointLight.frag");
-    spotLightShader.load("shaders/my.vert", "shaders/spotLight.frag");
-    planeShader.load("shaders/my.vert", "shaders/shadow.frag");
-    skyboxShader.load("shaders/skybox.vert", "shaders/skybox.frag");
-    needsReload = false;
+    if (needsReload) {
+        directionalLightShader.load("shaders/my.vert", "shaders/directionalLight.frag");
+        pointLightShader.load("shaders/my.vert", "shaders/pointLight.frag");
+        spotLightShader.load("shaders/my.vert", "shaders/spotLight.frag");
+        planeShader.load("shaders/my.vert", "shaders/shadow.frag");
+        skyboxShader.load("shaders/skybox.vert", "shaders/skybox.frag");
+        needsReload = false;
+    }
 }
 
 void ofApp::updateCameraRotation(float dx, float dy)
@@ -479,6 +482,10 @@ void ofApp::keyPressed(int key)
     {
         isTorusDrawn = !isTorusDrawn;
     }
+    if (key == 'e')
+    {
+        allowMouseMovement = !allowMouseMovement;
+    }
 }
 
 //--------------------------------------------------------------
@@ -509,6 +516,7 @@ void ofApp::keyReleased(int key)
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y)
 {
+    if (allowMouseMovement)
     if (prevX != 0 && prevY != 0)
     {
         // Previous mouse position has been initialized.

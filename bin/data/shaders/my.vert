@@ -5,6 +5,13 @@ layout (location = 1) in vec4 tangent;
 layout (location = 2) in vec3 normal;
 layout (location = 3) in vec2 uv;
 
+out vec3 positionTemp;
+out vec4 tangentTemp;
+out vec3 normalTemp;
+out vec2 uvTemp;
+
+
+
 out vec2 fragUV;
 out vec3 fragWorldPos;
 out vec3 fragNormal;
@@ -14,9 +21,21 @@ uniform mat4 mvp;
 uniform mat4 model;
 uniform mat3 normalMatrix;
 
+out mat4 mvpTemp;
+out mat4 modelTemp;
+out mat3 normalMatrixTemp;
 void main()
 {
     gl_Position = mvp * vec4(position, 1.0);
+    positionTemp = position;
+    tangentTemp = tangent;
+    normalTemp = normal;
+    uvTemp = uv;
+
+    mvpTemp = mvp;
+    modelTemp = model;
+    normalMatrixTemp = normalMatrix;
+
     fragWorldPos = (model * vec4(position, 1.0)).xyz;
 
     fragUV = vec2(uv.x, 1 - uv.y);

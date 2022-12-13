@@ -17,5 +17,7 @@ int main( )
     // window->setFullscreen(true);
 
 	// This kicks off the running of the app
-	ofRunApp(new ofAppPlane());
+    //ofRunApp(new ofApp());
+    //ofRunApp(new ofAppPlane());
+    ofRunApp(new ofAppTerrain());
 }

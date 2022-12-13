@@ -45,7 +45,6 @@ void buildPlaneMesh(float width, float depth, float height, ofMesh& planeMesh)
 
 void ofApp::reloadShaders()
 {
-    ofPlane.reloadShaders();
     directionalLightShader.load("shaders/mesh.vert", "shaders/directionalLight.frag");
     terrainShader.load("shaders/mesh.vert", "shaders/directionalLight.frag");
     waterShader.load("shaders/mesh.vert", "shaders/water.frag");

@@ -101,8 +101,6 @@ void ofAppTerrain::setup()
     // Set sky color.
     ofSetBackgroundColor(186, 186, 255);
 
-    // Initialize Xbox controller handle
-    controller.setup();
 
     auto window{ ofGetCurrentWindow() };
 
@@ -124,9 +122,6 @@ void ofAppTerrain::setup()
     shieldNormal.load("textures/shield_normal.png");
     //shieldSpecular.load("textures/shield_spec.png");
 
-
-        // building plane mesh for FBO stuff
-    buildPlaneMesh(20000.0, 20000.0, 752.475, planeMesh);
 
     // Initialize the camera.
     headAngle = radians(180.0f);
@@ -172,17 +167,6 @@ void ofAppTerrain::setup()
     // Create the water plane
     buildPlaneMesh(heightmap.getWidth() - 1, heightmap.getHeight() - 1, world.waterHeight, waterPlane);
 
-    // Define character height relative to gravity
-    float charHeight = -world.gravity * 0.1685f;
-    //character.setCharacterHeight(charHeight);
-
-    // Set initial character position.
-    //character.setPosition(fpCamera.position);
-
-    // Set character movement parameters
-    characterWalkSpeed = 10 * charHeight; // much faster than realism for efficiently moving around the map
-    //characterJumpSpeed = 10 * charHeight; // much higher than realism for efficiently moving around the map
-
 
 
 
@@ -207,39 +191,9 @@ void ofAppTerrain::setup()
 
 }
 
-//void ofApp::updateFPCamera(float dx, float dy)
-//{
-//    // Turn left/right.  Use quadratic response curve.
-//    float dxQuad = dx * abs(dx);
-//
-//    // Calculate rotation around the y-axis.
-//    headAngle += dxQuad;
-//    if (headAngle > 2 * pi<float>())
-//    {
-//        headAngle -= 2 * pi<float>();
-//    }
-//    else if (headAngle < 0)
-//    {
-//        headAngle += 2 * pi<float>();
-//    }
-//
-//    // Look up/down.  Use quadratic response curve.
-//    pitchAngle = clamp(pitchAngle + dy * abs(dy), -pi<float>() / 2, pi<float>() / 2);
-//
-//    // Update character's rotation: rotation around the x-axis.
-//    fpCamera.rotation = rotate(headAngle, vec3(0, 1, 0)) * rotate(pitchAngle, vec3(1, 0, 0));
-//}
-
 //--------------------------------------------------------------
 void ofAppTerrain::update()
 {
-    // Make sure that jump doesn't get spammed while the button is being held down.
-    bool previousJumpState{ controller.getGamepad(0).a };
-
-    controller.update();
-
-    Gamepad gamepad{ controller.getGamepad(0) };
-
     mat3 headRotationMatrix{ rotate(headAngle, vec3(0, 1, 0)) };
 
     float dt{ static_cast<float>(ofGetLastFrameTime()) };
@@ -257,11 +211,6 @@ void ofAppTerrain::update()
         reloadShaders();
     }
 
-    // Advance character physics.
-    //character.update(ofGetLastFrameTime());
-
-    // Use new character position as the camera position.
-    //fpCamera.position = character.getPosition();
 
     // Load new cells if necessary:
     cellManager.optimizeForPosition(fpCamera.position);
@@ -344,7 +293,7 @@ void ofAppTerrain::draw()
     float midLODPlane{ length(vec2(
         0.5f * NEAR_LOD_SIZE * NEAR_LOD_RANGE,
         fpCamera.position.y - world.getTerrainHeightAtPosition(fpCamera.position))) };
-    cout << midLODPlane << endl;
+    //cout << midLODPlane << endl;
     midLODPlane = 250;
 
     // Calculate an appropriate far plane for the distant terrain.
@@ -513,7 +462,6 @@ void ofAppTerrain::draw()
 void ofAppTerrain::exit()
 {
     cellManager.stop();
-    controller.exit();
 }
 
 //--------------------------------------------------------------

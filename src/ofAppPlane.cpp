@@ -48,42 +48,33 @@ void ofAppPlane::setup()
 
     ofSetVerticalSync(false);
 
-    ofDisableArbTex(); // IMPORTANT!
+    ofDisableArbTex(); 
 
     // Enable interpolation across sides of the cubemap
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
     // Disable Windows cursor
     auto window{ ofGetCurrentWindow() };
-    //glfwSetInputMode(dynamic_pointer_cast<ofAppGLFWWindow>(window)
-    //    ->getGLFWWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     ofEnableDepthTest();
 
     // Load shaders for the first time
     reloadShaders();
 
-    // Load shield mesh
+    // Load meshes
     shieldMesh.load("models/shield.ply");
     staffMesh.load("models/staff.ply");
-    jarMesh.load("models/jar.ply");
     coneMesh.load("models/cone.ply");
-    cube.load("models/cube.ply");
     cylinderMesh.load("models/cylinder.ply");
-    sphereMesh.load("models/sphere.ply");
     torusMesh.load("models/torus.ply");
-    //cupMesh.load("models/NewTest.ply");
+
     calcTangents(shieldMesh);
     calcTangents(staffMesh);
-    //calcTangents(cupMesh);
 
     // Load shield textures
     shieldDiffuse.load("textures/shield_diffuse.png");
     shieldNormal.load("textures/shield_normal.png");
     shieldSpecular.load("textures/shield_spec.png");
-
-    swordDiffuse.load("textures/sword_color.png");
-    swordNormal.load("textures/sword_normal.png");
 
     // Load skybox mesh
     cubeMesh.load("models/cube.ply");
@@ -112,6 +103,7 @@ void ofAppPlane::setup()
 
 void ofAppPlane::reloadShaders()
 {
+    // Reloads all shaders
     if (needsReload) {
         directionalLightShader.load("shaders/my.vert", "shaders/directionalLightPlane.frag");
         pointLightShader.load("shaders/my.vert", "shaders/pointLight.frag");
@@ -150,6 +142,7 @@ void ofAppPlane::update()
     camera.rotation = rotate(cameraHead, vec3(0, 1, 0)) *
         rotate(cameraPitch, vec3(1, 0, 0));
 
+    // Update positions of moving meshes
     time += dt;
     shieldPosition = vec3(sin(time), 1, 0);
     staffPosition = vec3(2 * sin(time), 0, 1);
@@ -162,6 +155,7 @@ void ofAppPlane::drawMeshDir(const CameraMatrices& camMatrices,
     ofShader& shader, ofMesh& mesh,
     glm::mat4 modelMatrix)
 {
+    // Drawing a mesh that is only taking in a directional light
     using namespace glm;
 
     // assumes shader is already active
@@ -183,6 +177,7 @@ void ofAppPlane::drawMeshPoint(const CameraMatrices& camMatrices,
     ofShader& shader, ofMesh& mesh,
     glm::mat4 modelMatrix)
 {
+    // Drawing a mesh that is only taking in a point light
     using namespace glm;
 
     // assumes shader is already active
@@ -203,6 +198,7 @@ void ofAppPlane::drawMeshSpot(const CameraMatrices& camMatrices,
     ofShader& shader, ofMesh& mesh,
     glm::mat4 modelMatrix)
 {
+    // Drawing a mesh that is only taking in a spot light
     using namespace glm;
 
     // assumes shader is already active
@@ -226,6 +222,7 @@ void ofAppPlane::drawMeshMix(const CameraMatrices& camMatrices,
     ofShader& shader, ofMesh& mesh,
     glm::mat4 modelMatrix)
 {
+    // Drawing a mesh that is taking in multiple light sources (in this case, spot and directional lights)
     using namespace glm;
 
     // assumes shader is already active
@@ -234,13 +231,10 @@ void ofAppPlane::drawMeshMix(const CameraMatrices& camMatrices,
     shader.setUniform3f("lightDir", dirLight.direction);
     shader.setUniform3f("lightColor", dirLight.color * dirLight.intensity);
 
-
-
     shader.setUniform3f("lightPosition", spotLight.position);
     shader.setUniform3f("lightConeDirection", spotLight.direction);
     shader.setUniform1f("lightCutoff", spotLight.cutoff);
     shader.setUniform3f("lightColor", spotLight.color * spotLight.intensity);
-
 
     shader.setUniform3f("ambientColor", ambientLight);
     shader.setUniformMatrix4f("mvp",
@@ -253,6 +247,7 @@ void ofAppPlane::drawMeshMix(const CameraMatrices& camMatrices,
 
 void ofAppPlane::drawCube(const CameraMatrices& camMatrices)
 {
+    // Drawing skymap cube
     using namespace glm;
 
     skyboxShader.begin();
@@ -267,6 +262,7 @@ void ofAppPlane::drawCube(const CameraMatrices& camMatrices)
 
 void ofAppPlane::drawScene(CameraMatrices& camMatrices, int reflection)
 {
+    // Drawing the scene relative to a specific camera
     using namespace glm;
 
     // Define the directional light
@@ -297,17 +293,8 @@ void ofAppPlane::drawScene(CameraMatrices& camMatrices, int reflection)
     // Set up the textures in advance
     directionalLightShader.setUniformTexture("diffuseTex", shieldDiffuse, 0);
     directionalLightShader.setUniformTexture("normalTex", shieldNormal, 1); // IMPORTANT: Use a different slot
-    // directional light
-    //drawMesh(camMatrices, dirLight, vec3(0.10),
-    //    directionalLightShader, shieldMesh,
-    //    translate(vec3(shieldPosition)));
-    //
-    //// Spot light
-    //drawMesh(camMatrices, spotLight, vec3(0.10),
-    //    directionalLightShader, shieldMesh,
-    //    translate(vec3(shieldPosition)));
 
-    // Main camera
+    // Drawing only meshes that should currently be displayed
     if (isShieldDrawn)
         drawMeshMix(camMatrices, spotLight, dirLight, vec3(0.10),
             directionalLightShader, shieldMesh,
@@ -338,34 +325,32 @@ void ofAppPlane::drawScene(CameraMatrices& camMatrices, int reflection)
 //--------------------------------------------------------------
 void ofAppPlane::draw()
 {
-
-
+    // Main draw function
     using namespace glm;
 
+    // Setting values for aspect and near and far planes
     float width{ static_cast<float>(ofGetViewportWidth()) };
     float height{ static_cast<float>(ofGetViewportHeight()) };
     float aspect = width / height;
     float nearPlane = 1.0f;
     float farPlane = 20.0f;
 
-    mat4 spotShadowView = (lookAt(spotLightPos, spotLightPos + spotLightDir, vec3(0, 1, 0)));
-    mat4 spotShadowProj = perspective((radians(90.0f)), aspect, nearPlane, farPlane);
-
-    // in lookAt, use spot light position for eye, position + direction for center, and (0,1,0) for up
+    // Setting up both FBO cameras
     mat4 dirShadowView = mat4(mat3(lookAt(vec3(1, 1, 1), vec3(0, 0, 0), vec3(0, 1, 0))));
     mat4 dirShadowProj = ortho(-4.0f, 4.0f, -4.0f, 4.0f, -100.0f, 100.0f);
 
-    // FBO camera
+    mat4 spotShadowView = (lookAt(spotLightPos, spotLightPos + spotLightDir, vec3(0, 1, 0)));
+    mat4 spotShadowProj = perspective((radians(90.0f)), aspect, nearPlane, farPlane);
+
     CameraMatrices dirFboCamMatrices{ dirShadowView, dirShadowProj };
     CameraMatrices spotFboCamMatrices{ spotShadowView, spotShadowProj };
 
-    // Calculate the view and projection matrices for the camera.
+    // Setting up the main camera
     CameraMatrices camMatrices{ camera, aspect, 0.01f, 40.0f };
+
+    // Debugging
     //camMatrices = dirFboCamMatrices;
     //camMatrices = spotFboCamMatrices;
-
-
-
 
 
     // offscreen rendering pass
@@ -379,12 +364,10 @@ void ofAppPlane::draw()
     drawScene(spotFboCamMatrices, 1);
     fbo2.end();
 
-
     drawScene(camMatrices, 0);
 
-
+    // Using plane shader to cast shadows onto the plane
     planeShader.begin();
-
 
     planeShader.setUniformTexture("diffuseTex", shieldDiffuse, 0);
     planeShader.setUniformTexture("normalTex", shieldNormal, 1);
@@ -414,9 +397,7 @@ void ofAppPlane::draw()
     planeMesh.draw();
     planeShader.end();
 
-
-
-
+    // Draw the frame time last so it doesn't get drawn over
     drawFrameTime();
 }
 
@@ -425,43 +406,37 @@ void ofAppPlane::keyPressed(int key)
 {
     using namespace glm;
 
+    // Forward and backward
     if (key == OF_KEY_UP || key == 'w')
     {
-        // Forward motion
-        // Converting from camera space velocity to world space velocity
         velocity.z = -1;
     }
     else if (key == OF_KEY_DOWN || key == 's')
     {
-        // Backwards motion
-        // Converting from camera space velocity to world space velocity
         velocity.z = 1;
     }
+
+    // Left and right
     else if (key == OF_KEY_LEFT || key == 'a')
     {
-        // Forward motion
-        // Converting from camera space velocity to world space velocity
         velocity.x = -1;
     }
     else if (key == OF_KEY_RIGHT || key == 'd')
     {
-        // Backwards motion
-        // Converting from camera space velocity to world space velocity
         velocity.x = 1;
     }
 
+    // Up and down
     else if (key == 'r')
     {
-        // Backwards motion
-        // Converting from camera space velocity to world space velocity
         velocity.y = 1;
     }
     else if (key == 'f')
     {
-        // Backwards motion
-        // Converting from camera space velocity to world space velocity
         velocity.y = -1;
     }
+
+    // Setting visibility of meshes with 1-5
     if (key == '1')
     {
         isShieldDrawn = !isShieldDrawn;
@@ -482,6 +457,8 @@ void ofAppPlane::keyPressed(int key)
     {
         isTorusDrawn = !isTorusDrawn;
     }
+
+    // Allowing or disallowing mouse movement
     if (key == 'e')
     {
         allowMouseMovement = !allowMouseMovement;
@@ -496,19 +473,18 @@ void ofAppPlane::keyReleased(int key)
         // Reload shaders
         needsReload = true;
     }
+
+    // Reseting velocity when keys are released
     else if (key == OF_KEY_LEFT || key == 'a' || key == OF_KEY_RIGHT || key == 'd')
     {
-        // Reset velocity when a key is released
         velocity.x = 0;
     }
     else if (key == OF_KEY_UP || key == 'w' || key == OF_KEY_DOWN || key == 's')
     {
-        // Reset velocity when a key is released
         velocity.z = 0;
     }
     else if (key == 'r' || key == 'f')
     {
-        // Reset velocity when a key is released
         velocity.y = 0;
     }
 }
@@ -516,6 +492,7 @@ void ofAppPlane::keyReleased(int key)
 //--------------------------------------------------------------
 void ofAppPlane::mouseMoved(int x, int y)
 {
+    // update camera rotation only when allowMouseMovement is true
     if (allowMouseMovement)
         if (prevX != 0 && prevY != 0)
         {
@@ -579,6 +556,7 @@ void ofAppPlane::dragEvent(ofDragInfo dragInfo)
 
 }
 
+// Function to draw the frame time
 void ofAppPlane::drawFrameTime()
 {
     glDisable(GL_CULL_FACE);

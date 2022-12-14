@@ -118,8 +118,8 @@ void ofAppTerrain::setup()
     calcTangents(shieldMesh);
 
     // Load shield textures
-    shieldDiffuse.load("textures/shield_diffuse.png");
-    shieldNormal.load("textures/shield_normal.png");
+    //shieldDiffuse.load("textures/shield_diffuse.png");
+    //shieldNormal.load("textures/shield_normal.png");
     //shieldSpecular.load("textures/shield_spec.png");
 
 
@@ -174,11 +174,13 @@ void ofAppTerrain::setup()
     // Shadow stuff
     // Load shield mesh
     bigStaffMesh.load("models/bigStaff.ply");
+    bigJarMesh.load("models/bigJar.ply");
     calcTangents(bigStaffMesh);
+    calcTangents(bigJarMesh);
     // Load shield textures
-    shieldDiffuse.load("textures/shield_diffuse.png");
-    shieldNormal.load("textures/shield_normal.png");
-    shieldSpecular.load("textures/shield_spec.png");
+    //shieldDiffuse.load("textures/shield_diffuse.png");
+    //shieldNormal.load("textures/shield_normal.png");
+    //shieldSpecular.load("textures/shield_spec.png");
     // Allocate a 1024x1024 RGB+alpha framebuffer
     ofFboSettings fboSettings{};
     fboSettings.width = 1024;
@@ -220,7 +222,8 @@ void ofAppTerrain::update()
 
     // Shield stuff
     time += dt;
-    bigStaffPosition = vec3(10281.8 + sin(time), 752.475, 8699.67);
+    bigStaffPosition = vec3(10281.8 + 4*sin(time), 752.475, 8699.67);
+    bigJarPosition = vec3(10291.8, 752.475, 8699.67 - 4*sin(time));
 
 }
 
@@ -280,6 +283,9 @@ void ofAppTerrain::drawScene(CameraMatrices& camMatrices, int reflection)
     drawMesh(camMatrices, dirLight, vec3(0.0),
         directionalLightShader2, bigStaffMesh,
         translate(vec3(bigStaffPosition)));
+    drawMesh(camMatrices, dirLight, vec3(0.0),
+        directionalLightShader2, bigJarMesh,
+        translate(vec3(bigJarPosition)));
 
     directionalLightShader2.end();
 }
@@ -360,7 +366,7 @@ void ofAppTerrain::draw()
         //10281.8, 764.475, 8699.67
 
     mat4 dirShadowView = lookAt(vec3(1, 1, -1) + fpCamera.position, fpCamera.position, vec3(0, 1, 0));
-    mat4 dirShadowProj = ortho(-10.0f, 10.0f, -10.0f, 10.0f, -500.0f, 500.0f);
+    mat4 dirShadowProj = ortho(-50.0f, 50.0f, -50.0f, 50.0f, -500.0f, 500.0f);
     mat4 dirShadowProjClose = ortho(-5.0f, 5.0f, -5.0f, 5.0f, -50.0f, 50.0f);
 
     // FBO camera

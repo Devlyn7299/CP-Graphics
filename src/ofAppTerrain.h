@@ -86,6 +86,7 @@ private:
     CellManager<NEAR_LOD_RANGE + 1> cellManager{ heightmap, heightmapScale, NEAR_LOD_SIZE };
 
     ofMesh bigStaffMesh;
+    ofMesh bigJarMesh;
 
     // Mesh of a shield
     ofMesh shieldMesh;
@@ -137,6 +138,7 @@ private:
     float time{ 0 };
     glm::vec3 shieldPosition{ 0, 1, 0 };
     glm::vec3 bigStaffPosition{ 0, 1, 0 };
+    glm::vec3 bigJarPosition{ 0, 1, 0 };
 
     // Reloads the shaders while the application is running.
     void reloadShaders();

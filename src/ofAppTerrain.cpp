@@ -42,33 +42,29 @@ void ofAppTerrain::buildPlaneMesh(float width, float depth, float height, ofMesh
 
 void ofAppTerrain::reloadShaders()
 {
-    directionalLightShader.load("shaders/mesh.vert", "shaders/directionalLight.frag");
-    terrainShader.load("shaders/mesh.vert", "shaders/directionalLight.frag");
-    waterShader.load("shaders/mesh.vert", "shaders/water.frag");
-    shadowShader.load("shaders/mesh.vert", "shaders/shadow.frag");
+    if (needsReload)
+    {
+        terrainShader.load("shaders/my.vert", "shaders/lights.frag");
+        waterShader.load("shaders/my.vert", "shaders/water.frag");
 
-    // Shadow stuff
-    directionalLightShader2.load("shaders/mesh.vert", "shaders/directionalLight2.frag");
-    //pointLightShader.load("shaders/my.vert", "shaders/pointLight.frag");
-    //spotLightShader.load("shaders/my.vert", "shaders/spotLight.frag");
-    planeShader.load("shaders/mesh.vert", "shaders/shadow2.frag");
-    //skyboxShader.load("shaders/skybox.vert", "shaders/skybox.frag");
+        lightShader.load("shaders/my.vert", "shaders/lights.frag");
+        shadowShader.load("shaders/my.vert", "shaders/shadowPlane.frag");
 
+        // Setup terrain shader uniform variables
+        terrainShader.begin();
+        terrainShader.setUniform1f("usedForTerrain", 1);
+        terrainShader.setUniform3f("dirLightDir", normalize(vec3(1, 1, -1)));
+        terrainShader.setUniform3f("dirLightColor", vec3(1, 1, 0.5));
+        terrainShader.setUniform3f("ambientColor", vec3(0.15, 0.15, 0.3));
+        terrainShader.setUniform1f("gammaInv", 1.0f / 2.2f);
+        terrainShader.setUniform3f("meshColor", vec3(0.25, 0.5, 0.25));
+        terrainShader.setUniformMatrix3f("normalMatrix", mat3());
+        terrainShader.setUniform1f("usedForTerrain", 0);
 
+        terrainShader.end();
 
-    // Setup terrain shader uniform variables
-    terrainShader.begin();
-    terrainShader.setUniform3f("lightDir", normalize(vec3(1, 1, -1)));
-    terrainShader.setUniform3f("lightColor", vec3(1, 1, 0.5));
-    terrainShader.setUniform3f("ambientColor", vec3(0.15, 0.15, 0.3));
-    terrainShader.setUniform1f("gammaInv", 1.0f / 2.2f);
-    terrainShader.setUniform3f("meshColor", vec3(0.25, 0.5, 0.25));
-    terrainShader.setUniformMatrix3f("normalMatrix", mat3());
-    terrainShader.end();
-
-
-
-    needsReload = false;
+        needsReload = false;
+    }
 }
 
 void ofAppTerrain::updateCameraRotation(float dx, float dy)
@@ -110,19 +106,6 @@ void ofAppTerrain::setup()
     // Load the shaders for the first time.
     reloadShaders();
 
-    // Load shield mesh
-    shieldMesh.load("models/shield.ply");
-
-
-
-    calcTangents(shieldMesh);
-
-    // Load shield textures
-    //shieldDiffuse.load("textures/shield_diffuse.png");
-    //shieldNormal.load("textures/shield_normal.png");
-    //shieldSpecular.load("textures/shield_spec.png");
-
-
     // Initialize the camera.
     headAngle = radians(180.0f);
     fpCamera.fov = radians(90.0f);
@@ -137,9 +120,7 @@ void ofAppTerrain::setup()
 
     // Set initial camera position.
     fpCamera.position = vec3((heightmap.getWidth() - 1) * 0.5f, 850, (heightmap.getHeight() - 1) * 0.5f);
-    //fpCamera.position = vec3(0, 752.475, 0);
     // Setup the world parameters.
-    world.heightmap = &heightmap.getPixels();
     world.dimensions = vec3((heightmap.getWidth() - 1), heightmapScale, heightmap.getHeight() - 1);
     world.gravity = -world.dimensions.y * config.gravity;
     world.waterHeight = config.waterHeight * world.dimensions.y;
@@ -167,20 +148,12 @@ void ofAppTerrain::setup()
     // Create the water plane
     buildPlaneMesh(heightmap.getWidth() - 1, heightmap.getHeight() - 1, world.waterHeight, waterPlane);
 
-
-
-
-
-    // Shadow stuff
-    // Load shield mesh
+    // Load meshes
     bigStaffMesh.load("models/bigStaff.ply");
     bigJarMesh.load("models/bigJar.ply");
     calcTangents(bigStaffMesh);
     calcTangents(bigJarMesh);
-    // Load shield textures
-    //shieldDiffuse.load("textures/shield_diffuse.png");
-    //shieldNormal.load("textures/shield_normal.png");
-    //shieldSpecular.load("textures/shield_spec.png");
+
     // Allocate a 1024x1024 RGB+alpha framebuffer
     ofFboSettings fboSettings{};
     fboSettings.width = 1024;
@@ -189,8 +162,6 @@ void ofAppTerrain::setup()
     fboSettings.useDepth = true;
     fboSettings.depthStencilAsTexture = true;
     fbo.allocate(fboSettings);
-
-
 }
 
 //--------------------------------------------------------------
@@ -213,18 +184,13 @@ void ofAppTerrain::update()
         reloadShaders();
     }
 
-
     // Load new cells if necessary:
     cellManager.optimizeForPosition(fpCamera.position);
-    //cout << fpCamera.position << endl;
-    //10281.8, 764.475, 8699.67
 
-
-    // Shield stuff
+    // Move meshes
     time += dt;
-    bigStaffPosition = vec3(10281.8 + 4*sin(time), 752.475, 8699.67);
-    bigJarPosition = vec3(10291.8, 752.475, 8699.67 - 4*sin(time));
-
+    bigStaffPosition = vec3(10281.8 + 4 * sin(time), 752.475, 8699.67);
+    bigJarPosition = vec3(10291.8, 752.475, 8699.67 - 4 * sin(time));
 }
 
 void ofAppTerrain::drawMesh(const CameraMatrices& camMatrices,
@@ -236,6 +202,8 @@ void ofAppTerrain::drawMesh(const CameraMatrices& camMatrices,
     using namespace glm;
 
     // assumes shader is already active
+    shader.setUniform3f("dirLightDir", normalize(light.direction));
+    shader.setUniform3f("dirLightColor", light.color * light.intensity);
     shader.setUniform3f("cameraPosition", camMatrices.getCamera().position);
     shader.setUniform3f("lightDir", light.direction);
     shader.setUniform3f("lightColor", light.color * light.intensity);
@@ -258,36 +226,21 @@ void ofAppTerrain::drawScene(CameraMatrices& camMatrices, int reflection)
     dirLight.color = vec3(1, 1, 0.5);  // white light
     dirLight.intensity = 1;
 
-    //// Define the point light
-    //PointLight pointLight{ };
-    //pointLight.position = vec3(0, 0, 1.5);
-    //pointLight.color = vec3(1, 1, 1);  // white light
-    //pointLight.intensity = 1;
-
-    //// Define the spot light
-    //SpotLight spotLight{ };
-    //spotLight.position = vec3(0, 0, 1.5);
-    //spotLight.direction = vec3(0, 0, -1);
-    //spotLight.cutoff = cos(radians(15.0f /* degrees */));
-    //spotLight.color = vec3(1, 1, 1);  // white light
-    //spotLight.intensity = 1;
-
-    directionalLightShader2.begin();
+    lightShader.begin();
 
     // Set up the textures in advance
-    directionalLightShader2.setUniformTexture("diffuseTex", shieldDiffuse, 0);
-    directionalLightShader2.setUniformTexture("normalTex", shieldNormal, 1); // IMPORTANT: Use a different slot
-    //directionalLightShader.setUniformTexture("specularTex", shieldSpecular, 2);
-    //directionalLightShader.setUniform1f("shininess", 64.0);
-    //directionalLightShader.setUniform1i("reflection", reflection);
-    drawMesh(camMatrices, dirLight, vec3(0.0),
-        directionalLightShader2, bigStaffMesh,
+    lightShader.setUniform1f("hasTexture", 0);
+
+    if (isStaffDrawn)
+    drawMesh(camMatrices, dirLight, vec3(0.1),
+        lightShader, bigStaffMesh,
         translate(vec3(bigStaffPosition)));
-    drawMesh(camMatrices, dirLight, vec3(0.0),
-        directionalLightShader2, bigJarMesh,
+    if (isJarDrawn)
+    drawMesh(camMatrices, dirLight, vec3(0.1),
+        lightShader, bigJarMesh,
         translate(vec3(bigJarPosition)));
 
-    directionalLightShader2.end();
+    lightShader.end();
 }
 
 //--------------------------------------------------------------
@@ -314,6 +267,7 @@ void ofAppTerrain::draw()
 
     // Distant terrain
     terrainShader.begin();
+    terrainShader.setUniform1f("usedForTerrain", 1);
     terrainShader.setUniform1f("startFade", farPlaneDistant * 0.95f);
     terrainShader.setUniform1f("endFade", farPlaneDistant * 1.0f);
     terrainShader.setUniformMatrix4f("modelView", camFarMatrices.getView());
@@ -321,6 +275,7 @@ void ofAppTerrain::draw()
 
     // Draw the static distant terrain mesh.
     farTerrainVBO.drawElements(GL_TRIANGLES, farTerrainVBO.getNumIndices());
+    terrainShader.setUniform1f("usedForTerrain", 0);
 
     terrainShader.end();
 
@@ -349,105 +304,53 @@ void ofAppTerrain::draw()
     // Calculate view and projection matrices for the close terrain.
     CameraMatrices camNearMatrices{ fpCamera, aspect, nearPlane, midLODPlane };
 
-    //// Debugging matrices:
-    //midLODPlane = 100000; // to push back fog
-    //mat4 proj { glm::perspective(radians(100.0f), aspect, 1.0f, 100000.0f) };
-    //mat4 view { glm::rotate(radians(60.0f), vec3(1, 0, 0)) *
-    //    glm::translate(vec3(-10240, -8000, -16000)) };
-    //mat4 modelView { view };
-    //mat4 mvp { proj * view };
-
-
-    // Shadow stuff
-    mat4 spotShadowView = (lookAt(vec3(0, 2, 1), vec3(0, 1, 0), vec3(0, 1, 0)));
-    mat4 spotShadowProj = perspective((radians(90.0f)), aspect, nearPlane, midLODPlane);
-
     // in lookAt, use spot light position for eye, position + direction for center, and (0,1,0) for up
-        //10281.8, 764.475, 8699.67
-
     mat4 dirShadowView = lookAt(vec3(1, 1, -1) + fpCamera.position, fpCamera.position, vec3(0, 1, 0));
     mat4 dirShadowProj = ortho(-50.0f, 50.0f, -50.0f, 50.0f, -500.0f, 500.0f);
-    mat4 dirShadowProjClose = ortho(-5.0f, 5.0f, -5.0f, 5.0f, -50.0f, 50.0f);
 
     // FBO camera
     CameraMatrices dirFboCamMatrices{ dirShadowView, dirShadowProj };
-    CameraMatrices dirFboCamMatrices2{ dirShadowView, dirShadowProjClose };
-    CameraMatrices spotFboCamMatrices{ spotShadowView, spotShadowProj };
-    //camNearMatrices = dirFboCamMatrices;
 
     fbo.begin();
     ofClear(0, 0, 0, 0);
     drawScene(dirFboCamMatrices, 0);
-    //drawScene(dirFboCamMatrices2, 0);
-
-    //drawScene(spotFboCamMatrices, 1);
     fbo.end();
 
-
     drawScene(camNearMatrices, 0);
-
-
-
 
     mat4 modelView{ camNearMatrices.getView() };
     mat4 mvp{ camNearMatrices.getProj() * camNearMatrices.getView() };
 
-    // Near terrain
-    //terrainShader.begin();
-    //terrainShader.setUniform1f("startFade", midLODPlane * 0.75f);
-    //terrainShader.setUniform1f("endFade", midLODPlane * 0.95f);
-    //terrainShader.setUniformMatrix4f("modelView", modelView);
-    //terrainShader.setUniformMatrix4f("mvp", mvp);
+    shadowShader.begin();
+
+    shadowShader.setUniform1f("usedForTerrain", 1);
+
+    shadowShader.setUniform1f("startFade", midLODPlane * 0.75f);
+    shadowShader.setUniform1f("endFade", midLODPlane * 0.95f);
+    shadowShader.setUniformMatrix4f("modelView", modelView);
+    shadowShader.setUniformMatrix4f("mvp", mvp);
+
+    shadowShader.setUniform3f("ambientColor", vec3(0.15, 0.15, 0.3));
+    shadowShader.setUniform1f("gammaInv", 1.0f / 2.2f);
+    shadowShader.setUniform3f("meshColor", vec3(0.25, 0.5, 0.25));
 
 
+    shadowShader.setUniform3f("dirLightDir", (vec3(1, 1, -1)));
+    shadowShader.setUniform3f("dirLightColor", vec3(1, 1, 0.5));
 
-
-    planeShader.begin();
-
-    planeShader.setUniform1f("startFade", midLODPlane * 0.75f);
-    planeShader.setUniform1f("endFade", midLODPlane * 0.95f);
-    planeShader.setUniformMatrix4f("modelView", modelView);
-    planeShader.setUniformMatrix4f("mvp", mvp);
-    planeShader.setUniformTexture("diffuseTex", shieldDiffuse, 0);
-    planeShader.setUniformTexture("normalTex", shieldNormal, 1);
-
-    //planeShader.setUniform3f("spotLightPos", vec3(0, 2, 1));
-    //planeShader.setUniform3f("spotLightConeDir", vec3(0, -1, -1));
-    //planeShader.setUniform1f("spotLightCutoff", cos(radians(10.0f /* degrees */)));
-
-    //planeShader.setUniform3f("spotLightColor", vec3(0.9, 0.9, 0.9));
-    planeShader.setUniform3f("ambientColor", vec3(0.15, 0.15, 0.3));
-    planeShader.setUniform1f("gammaInv", 1.0f / 2.2f);
-    planeShader.setUniform3f("meshColor", vec3(0.25, 0.5, 0.25));
-
-
-    //dirLight.direction = normalize(vec3(1, 1, 1));
-    //dirLight.color = vec3(0.9, 0.9, 0.1);  // white light
-
-    planeShader.setUniform3f("dirLightDir", (vec3(1, 1, -1)));
-    planeShader.setUniform3f("dirLightColor", vec3(1, 1, 0.5));
-
-    planeShader.setUniform3f("cameraPos", camNearMatrices.getCamera().position);
-    planeShader.setUniformMatrix4f("mvp", camNearMatrices.getProj() * camNearMatrices.getView());
-    planeShader.setUniformMatrix4f("model", mat4());
-    planeShader.setUniformMatrix3f("normalMatrix", mat3());
-    planeShader.setUniform1f("lightType", 1);
-    planeShader.setUniformMatrix4f("shadowMatrix",
+    shadowShader.setUniform3f("cameraPos", camNearMatrices.getCamera().position);
+    shadowShader.setUniformMatrix4f("mvp", camNearMatrices.getProj() * camNearMatrices.getView());
+    shadowShader.setUniformMatrix4f("model", mat4());
+    shadowShader.setUniformMatrix3f("normalMatrix", mat3());
+    shadowShader.setUniformMatrix4f("shadowMatrix",
         dirFboCamMatrices.getProj() * dirFboCamMatrices.getView());
-    //spotFboCamMatrices.getProj()* spotFboCamMatrices.getView());
-    planeShader.setUniform1f("lightType", 2);
 
-    planeShader.setUniformMatrix4f("shadowMatrix2",
-        spotFboCamMatrices.getProj() * spotFboCamMatrices.getView());
-    planeShader.setUniformTexture("fboTexture", fbo.getDepthTexture(), 0);
+    shadowShader.setUniformTexture("fboTexture", fbo.getDepthTexture(), 0);
 
     // Draw the high level-of-detail cells.
     cellManager.drawActiveCells(fpCamera.position, midLODPlane);
-    //planeMesh.draw();
 
-    planeShader.end();
-
-    //terrainShader.end();
+    shadowShader.end();
 
     // Near water
     waterShader.begin();
@@ -490,7 +393,7 @@ void ofAppTerrain::keyPressed(int key)
         wasdVelocity.x = 50;
     }
 
-    // Added R and F to go up and down, relative to where the camera is pointing
+    // Added R and F to go up and down
     else if (key == 'f')
     {
         wasdVelocity.y = -50;
@@ -510,6 +413,17 @@ void ofAppTerrain::keyPressed(int key)
     {
         needsReload = true;
     }
+
+    if (key == '1')
+    {
+        isStaffDrawn = !isStaffDrawn;
+    }
+
+    if (key == '2')
+    {
+        isJarDrawn = !isJarDrawn;
+    }
+
 }
 
 //--------------------------------------------------------------

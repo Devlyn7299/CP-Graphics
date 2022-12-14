@@ -30,14 +30,8 @@ public:
 private:
     // SHADER STUFF
     
-    // Shader for a directional light
-    ofShader directionalLightShader;
-
-    // Shader for a point light
-    ofShader pointLightShader;
-
-    // Shader for a spot light
-    ofShader spotLightShader;
+    // Shader for lights
+    ofShader lightShader;
 
     // Variables for spot light and directional light values to be easily changed
     float dirLightIntensity{ 1 };
@@ -85,31 +79,9 @@ private:
     // Shield diffuse, normal, and specular maps
     ofImage shieldDiffuse;
     ofImage shieldNormal;
-    ofImage shieldSpecular;
-
-    // Draws a mesh that is affected by a point light
-    void drawMeshPoint(const CameraMatrices& camMatrices,
-        const PointLight& light,
-        const glm::vec3 ambientLight,
-        ofShader& shader, ofMesh& mesh,
-        glm::mat4 modelMatrix = glm::mat4{});
-
-    // Draws a mesh that is affected by a spot light
-    void drawMeshSpot(const CameraMatrices& camMatrices,
-        const SpotLight& light,
-        const glm::vec3 ambientLight,
-        ofShader& shader, ofMesh& mesh,
-        glm::mat4 modelMatrix = glm::mat4{});
-
-    // Draws a mesh that is affected by a directional light
-    void drawMeshDir(const CameraMatrices& camMatrices,
-        const DirectionalLight& light,
-        const glm::vec3 ambientLight,
-        ofShader& shader, ofMesh& mesh,
-        glm::mat4 modelMatrix = glm::mat4{});
 
     // Draws a mesh that is affected by multiple light sources
-    void drawMeshMix(const CameraMatrices& camMatrices,
+    void drawMesh(const CameraMatrices& camMatrices,
         const SpotLight& spotLight,
         const DirectionalLight& dirLight,
         const glm::vec3 ambientLight,

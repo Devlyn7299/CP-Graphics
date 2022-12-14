@@ -4,8 +4,6 @@
 #include "World.h"
 #include "CellManager.h"
 #include "Camera.h"
-#include "CharacterPhysics.h"
-#include "ofxXboxController.h"
 #include "CameraMatrices.h"
 #include "ofxCubemap.h"
 #include "PointLight.h"
@@ -46,6 +44,56 @@ public:
 
 
 private:
+    // SHADER STUFF
+    
+    // Shader for a directional light (to be used on terrain map)
+    ofShader directionalLightShader;
+    // Shader for all light sources (to be used on meshes)
+    ofShader lightShader;
+
+    // Shadow shader
+    ofShader shadowShader{};
+
+    // off-screen framebuffer object
+    ofFbo fbo{};
+
+    // Reloads the shaders while the application is running.
+    void reloadShaders();
+
+    // Set to true when the shader reload hotkey is pressed.
+    bool needsReload{ true };
+
+
+
+
+
+    // MESH STUFF
+
+    // Meshes to be used
+    ofMesh bigStaffMesh;
+    ofMesh bigJarMesh;
+
+    // Whether meshes are drawn
+    bool isStaffDrawn{ true };
+    bool isJarDrawn{ true };
+
+    // Animate meshes
+    float time{ 0 };
+    glm::vec3 bigStaffPosition{ 0, 1, 0 };
+    glm::vec3 bigJarPosition{ 0, 1, 0 };
+
+    void drawMesh(const CameraMatrices& camMatrices,
+        const DirectionalLight& light,
+        const glm::vec3 ambientLight,
+        ofShader& shader, ofMesh& mesh,
+        glm::mat4 modelMatrix = glm::mat4{});
+
+
+
+
+
+    // TERRAINMAP STUFF
+    
     // The number of quads in each row and column of a single terrain cell for the close, high level-of-detail terrain.
     const static unsigned int NEAR_LOD_SIZE{ 256 };
 
@@ -71,45 +119,24 @@ private:
     // Shader for rendering water.
     ofShader waterShader{};
 
-    // Shader for a directional light
-    ofShader directionalLightShader;
-    // Shader for a directional light
-    ofShader directionalLightShader2;
-
-    // Plane shader
-    ofShader shadowShader{};
-
     // The main game "world" that uses the heightmap.
     World world{};
 
     // A cell manager for the high level-of-detail close terrain.
     CellManager<NEAR_LOD_RANGE + 1> cellManager{ heightmap, heightmapScale, NEAR_LOD_SIZE };
 
-    ofMesh bigStaffMesh;
-    ofMesh bigJarMesh;
-
-    // Mesh of a shield
-    ofMesh shieldMesh;
-
-    // diffuse (color) texture
-    ofImage shieldDiffuse;
-
-    // normal map
-    ofImage shieldNormal;
-
-    // specular texture
-    ofImage shieldSpecular;
-
-    // off-screen framebuffer object
-    ofFbo fbo{};
-
     // A single terrain mesh. Uncomment the following line if not using a cell manager.
     ofMesh farTerrain{};
     ofVbo farTerrainVBO{};
 
-    // Set to true when the shader reload hotkey is pressed.
-    bool needsReload{ true };
+    void buildPlaneMesh(float width, float depth, float height, ofMesh& planeMesh);
 
+
+
+
+
+    // CAMERA STUFF
+    
     // The first-person camera.
     Camera fpCamera{};
 
@@ -134,33 +161,24 @@ private:
     // boolean that either allows or disallows mouse movement
     bool allowMouseMovement{ true };
 
-    // Animate shield position
-    float time{ 0 };
-    glm::vec3 shieldPosition{ 0, 1, 0 };
-    glm::vec3 bigStaffPosition{ 0, 1, 0 };
-    glm::vec3 bigJarPosition{ 0, 1, 0 };
-
-    // Reloads the shaders while the application is running.
-    void reloadShaders();
-
-    // Draws the whole scene using the currently active framebuffer
-    void drawScene(CameraMatrices& camMatrices, int reflection);
-
     // Called to update rotation of the camera from mouse movement
     void updateCameraRotation(float dx, float dy);
 
+
+
+
+
+    // EXTRA FUNCTIONS
+    
+    // Draws the whole scene using the currently active framebuffer
+    void drawScene(CameraMatrices& camMatrices, int reflection);
+
+    // Draws the FPS and frame time on the screen
     void drawFrameTime();
 
-    // Plane shader
-    ofShader planeShader{};
 
-    void buildPlaneMesh(float width, float depth, float height, ofMesh& planeMesh);
 
-    void drawMesh(const CameraMatrices& camMatrices,
-        const DirectionalLight& light,
-        const glm::vec3 ambientLight,
-        ofShader& shader, ofMesh& mesh,
-        glm::mat4 modelMatrix = glm::mat4{});
+
 
 
 };

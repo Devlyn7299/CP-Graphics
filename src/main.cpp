@@ -1,5 +1,4 @@
 #include "ofMain.h"
-#include "ofApp.h"
 #include "ofAppPlane.h"
 #include "ofAppTerrain.h"
 
@@ -17,7 +16,6 @@ int main( )
     // window->setFullscreen(true);
 
 	// This kicks off the running of the app
-    //ofRunApp(new ofApp());
-    //ofRunApp(new ofAppPlane());
-    ofRunApp(new ofAppTerrain());
+    ofRunApp(new ofAppPlane());
+    //ofRunApp(new ofAppTerrain());
 }

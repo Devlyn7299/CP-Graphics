@@ -69,12 +69,10 @@ void ofAppPlane::setup()
     torusMesh.load("models/torus.ply");
 
     calcTangents(shieldMesh);
-    calcTangents(staffMesh);
 
     // Load shield textures
     shieldDiffuse.load("textures/shield_diffuse.png");
     shieldNormal.load("textures/shield_normal.png");
-    shieldSpecular.load("textures/shield_spec.png");
 
     // Load skybox mesh
     cubeMesh.load("models/cube.ply");
@@ -105,9 +103,7 @@ void ofAppPlane::reloadShaders()
 {
     // Reloads all shaders
     if (needsReload) {
-        directionalLightShader.load("shaders/my.vert", "shaders/directionalLightPlane.frag");
-        pointLightShader.load("shaders/my.vert", "shaders/pointLight.frag");
-        spotLightShader.load("shaders/my.vert", "shaders/spotLight.frag");
+        lightShader.load("shaders/my.vert", "shaders/lights.frag");
         planeShader.load("shaders/my.vert", "shaders/shadowPlane.frag");
         skyboxShader.load("shaders/skybox.vert", "shaders/skybox.frag");
         needsReload = false;
@@ -149,73 +145,8 @@ void ofAppPlane::update()
     cylinderPosition = vec3(-3, 1, -sin(time));
 }
 
-void ofAppPlane::drawMeshDir(const CameraMatrices& camMatrices,
-    const DirectionalLight& light,
-    const glm::vec3 ambientLight,
-    ofShader& shader, ofMesh& mesh,
-    glm::mat4 modelMatrix)
-{
-    // Drawing a mesh that is only taking in a directional light
-    using namespace glm;
 
-    // assumes shader is already active
-    shader.setUniform3f("cameraPosition", camMatrices.getCamera().position);
-    shader.setUniform3f("lightDir", light.direction);
-    shader.setUniform3f("lightColor", light.color * light.intensity);
-    shader.setUniform3f("ambientColor", ambientLight);
-    shader.setUniformMatrix4f("mvp",
-        camMatrices.getProj() * camMatrices.getView() * modelMatrix);
-    shader.setUniformMatrix3f("normalMatrix",
-        inverse(transpose(mat3(modelMatrix))));
-    shader.setUniformMatrix4f("model", modelMatrix);
-    mesh.draw();
-}
-
-void ofAppPlane::drawMeshPoint(const CameraMatrices& camMatrices,
-    const PointLight& light,
-    const glm::vec3 ambientLight,
-    ofShader& shader, ofMesh& mesh,
-    glm::mat4 modelMatrix)
-{
-    // Drawing a mesh that is only taking in a point light
-    using namespace glm;
-
-    // assumes shader is already active
-    shader.setUniform3f("lightPosition", light.position);
-    shader.setUniform3f("lightColor", light.color * light.intensity);
-    shader.setUniform3f("ambientColor", ambientLight);
-    shader.setUniformMatrix4f("mvp",
-        camMatrices.getProj() * camMatrices.getView() * modelMatrix);
-    shader.setUniformMatrix4f("model", modelMatrix);
-    shader.setUniformMatrix3f("normalMatrix",
-        inverse(transpose(mat3(modelMatrix))));
-    mesh.draw();
-}
-
-void ofAppPlane::drawMeshSpot(const CameraMatrices& camMatrices,
-    const SpotLight& light,
-    const glm::vec3 ambientLight,
-    ofShader& shader, ofMesh& mesh,
-    glm::mat4 modelMatrix)
-{
-    // Drawing a mesh that is only taking in a spot light
-    using namespace glm;
-
-    // assumes shader is already active
-    shader.setUniform3f("lightPosition", light.position);
-    shader.setUniform3f("lightConeDirection", light.direction);
-    shader.setUniform1f("lightCutoff", light.cutoff);
-    shader.setUniform3f("lightColor", light.color * light.intensity);
-    shader.setUniform3f("ambientColor", ambientLight);
-    shader.setUniformMatrix4f("mvp",
-        camMatrices.getProj() * camMatrices.getView() * modelMatrix);
-    shader.setUniformMatrix4f("model", modelMatrix);
-    shader.setUniformMatrix3f("normalMatrix",
-        inverse(transpose(mat3(modelMatrix))));
-    mesh.draw();
-}
-
-void ofAppPlane::drawMeshMix(const CameraMatrices& camMatrices,
+void ofAppPlane::drawMesh(const CameraMatrices& camMatrices,
     const SpotLight& spotLight,
     const DirectionalLight& dirLight,
     const glm::vec3 ambientLight,
@@ -226,15 +157,15 @@ void ofAppPlane::drawMeshMix(const CameraMatrices& camMatrices,
     using namespace glm;
 
     // assumes shader is already active
+    shader.setUniform3f("spotLightPos", spotLight.position);
+    shader.setUniform3f("spotLightConeDir", spotLight.direction);
+    shader.setUniform1f("spotLightCutoff", spotLight.cutoff);
+    shader.setUniform3f("spotLightColor", spotLight.color * spotLight.intensity);
+
+    shader.setUniform3f("dirLightDir", normalize(dirLight.direction));
+    shader.setUniform3f("dirLightColor", dirLight.color * dirLight.intensity);
 
     shader.setUniform3f("cameraPosition", camMatrices.getCamera().position);
-    shader.setUniform3f("lightDir", dirLight.direction);
-    shader.setUniform3f("lightColor", dirLight.color * dirLight.intensity);
-
-    shader.setUniform3f("lightPosition", spotLight.position);
-    shader.setUniform3f("lightConeDirection", spotLight.direction);
-    shader.setUniform1f("lightCutoff", spotLight.cutoff);
-    shader.setUniform3f("lightColor", spotLight.color * spotLight.intensity);
 
     shader.setUniform3f("ambientColor", ambientLight);
     shader.setUniformMatrix4f("mvp",
@@ -268,15 +199,9 @@ void ofAppPlane::drawScene(CameraMatrices& camMatrices, int reflection)
     // Define the directional light
     DirectionalLight dirLight{ };
     dirLight.direction = normalize(vec3(1, 1, 1));
-    dirLight.color = vec3(0.9, 0.9, 0.1);  // white light
+    dirLight.color = vec3(0.1, 0.9, 0.1);  // white light
     dirLight.intensity = 1;
     dirLightIntensity = dirLight.intensity;
-
-    // Define the point light
-    PointLight pointLight{ };
-    pointLight.position = vec3(0, 0, 1.5);
-    pointLight.color = vec3(1, 1, 1);  // white light
-    pointLight.intensity = 1;
 
     // Define the spot light
     SpotLight spotLight{ };
@@ -289,34 +214,37 @@ void ofAppPlane::drawScene(CameraMatrices& camMatrices, int reflection)
     spotLightPos = spotLight.position;
     spotLightDir = spotLight.direction;
 
-    directionalLightShader.begin();
+    lightShader.begin();
     // Set up the textures in advance
-    directionalLightShader.setUniformTexture("diffuseTex", shieldDiffuse, 0);
-    directionalLightShader.setUniformTexture("normalTex", shieldNormal, 1); // IMPORTANT: Use a different slot
+    lightShader.setUniformTexture("diffuseTex", shieldDiffuse, 0);
+    lightShader.setUniformTexture("normalTex", shieldNormal, 1);
+    lightShader.setUniform1f("usedForTerrain", 0);
 
     // Drawing only meshes that should currently be displayed
+    lightShader.setUniform1f("hasTexture", 1);
     if (isShieldDrawn)
-        drawMeshMix(camMatrices, spotLight, dirLight, vec3(0.10),
-            directionalLightShader, shieldMesh,
+        drawMesh(camMatrices, spotLight, dirLight, vec3(0.10),
+            lightShader, shieldMesh,
             translate(vec3(shieldPosition)));
+    lightShader.setUniform1f("hasTexture", 0);
     if (isStaffDrawn)
-        drawMeshMix(camMatrices, spotLight, dirLight, vec3(0.0),
-            directionalLightShader, staffMesh,
+        drawMesh(camMatrices, spotLight, dirLight, vec3(0.10),
+            lightShader, staffMesh,
             translate(vec3(staffPosition)));
     if (isConeDrawn)
-        drawMeshMix(camMatrices, spotLight, dirLight, vec3(0.0),
-            directionalLightShader, coneMesh,
+        drawMesh(camMatrices, spotLight, dirLight, vec3(0.10),
+            lightShader, coneMesh,
             translate(vec3(conePosition)));
     if (isCylinderDrawn)
-        drawMeshMix(camMatrices, spotLight, dirLight, vec3(0.0),
-            directionalLightShader, cylinderMesh,
+        drawMesh(camMatrices, spotLight, dirLight, vec3(0.10),
+            lightShader, cylinderMesh,
             translate(vec3(cylinderPosition)));
     if (isTorusDrawn)
-        drawMeshMix(camMatrices, spotLight, dirLight, vec3(0.0),
-            directionalLightShader, torusMesh,
+        drawMesh(camMatrices, spotLight, dirLight, vec3(0.10),
+            lightShader, torusMesh,
             translate(vec3(torusPosition)));
 
-    directionalLightShader.end();
+    lightShader.end();
 
 
     drawCube(camMatrices);
@@ -348,7 +276,7 @@ void ofAppPlane::draw()
     // Setting up the main camera
     CameraMatrices camMatrices{ camera, aspect, 0.01f, 40.0f };
 
-    // Debugging
+    // Debugging by setting controlled camera to either FBO camera
     //camMatrices = dirFboCamMatrices;
     //camMatrices = spotFboCamMatrices;
 
@@ -368,9 +296,9 @@ void ofAppPlane::draw()
 
     // Using plane shader to cast shadows onto the plane
     planeShader.begin();
+    planeShader.setUniform3f("meshColor", vec3(1));
+    planeShader.setUniform1f("usedForTerrain", 0);
 
-    planeShader.setUniformTexture("diffuseTex", shieldDiffuse, 0);
-    planeShader.setUniformTexture("normalTex", shieldNormal, 1);
     planeShader.setUniform3f("ambientColor", vec3(0.25));
 
     planeShader.setUniform3f("spotLightPos", spotLightPos);
@@ -379,7 +307,7 @@ void ofAppPlane::draw()
     planeShader.setUniform3f("spotLightColor", vec3(0.9, 0.9, 0.9) * spotLightIntensity);
 
     planeShader.setUniform3f("dirLightDir", normalize(vec3(1, 1, 1)));
-    planeShader.setUniform3f("dirLightColor", vec3(0.9, 0.9, 0.1) * dirLightIntensity);
+    planeShader.setUniform3f("dirLightColor", vec3(0.1, 0.9, 0.1) * dirLightIntensity);
 
     planeShader.setUniform3f("cameraPos", camMatrices.getCamera().position);
     planeShader.setUniformMatrix4f("mvp", camMatrices.getProj() * camMatrices.getView());

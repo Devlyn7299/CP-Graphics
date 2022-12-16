@@ -57,13 +57,19 @@ private:
     // off-screen framebuffer object
     ofFbo fbo{};
 
+    // second fbo for spot light shadows
+    ofFbo fbo2{};
+
     // Reloads the shaders while the application is running.
     void reloadShaders();
 
     // Set to true when the shader reload hotkey is pressed.
     bool needsReload{ true };
 
-
+    float dirLightIntensity{ 1 };
+    float spotLightIntensity{ 1 };
+    glm::vec3 spotLightDir{};
+    glm::vec3 spotLightPos{};
 
 
 
@@ -83,7 +89,8 @@ private:
     glm::vec3 bigJarPosition{ 0, 1, 0 };
 
     void drawMesh(const CameraMatrices& camMatrices,
-        const DirectionalLight& light,
+        const SpotLight& spotLight,
+        const DirectionalLight& dirLight,
         const glm::vec3 ambientLight,
         ofShader& shader, ofMesh& mesh,
         glm::mat4 modelMatrix = glm::mat4{});

@@ -162,6 +162,7 @@ void ofAppTerrain::setup()
     fboSettings.useDepth = true;
     fboSettings.depthStencilAsTexture = true;
     fbo.allocate(fboSettings);
+    fbo2.allocate(fboSettings);
 }
 
 //--------------------------------------------------------------
@@ -191,10 +192,13 @@ void ofAppTerrain::update()
     time += dt;
     bigStaffPosition = vec3(10281.8 + 4 * sin(time), 752.475, 8699.67);
     bigJarPosition = vec3(10291.8, 752.475, 8699.67 - 4 * sin(time));
+
+    cout << fpCamera.position << endl << fpCamera.rotation << endl << endl;
 }
 
 void ofAppTerrain::drawMesh(const CameraMatrices& camMatrices,
-    const DirectionalLight& light,
+    const SpotLight& spotLight,
+    const DirectionalLight& dirLight,
     const glm::vec3 ambientLight,
     ofShader& shader, ofMesh& mesh,
     glm::mat4 modelMatrix)
@@ -202,11 +206,16 @@ void ofAppTerrain::drawMesh(const CameraMatrices& camMatrices,
     using namespace glm;
 
     // assumes shader is already active
-    shader.setUniform3f("dirLightDir", normalize(light.direction));
-    shader.setUniform3f("dirLightColor", light.color * light.intensity);
+    shader.setUniform3f("spotLightPos", spotLight.position);
+    shader.setUniform3f("spotLightConeDir", spotLight.direction);
+    shader.setUniform1f("spotLightCutoff", spotLight.cutoff);
+    shader.setUniform3f("spotLightColor", spotLight.color * spotLight.intensity);
+
+    shader.setUniform3f("dirLightDir", normalize(dirLight.direction));
+    shader.setUniform3f("dirLightColor", dirLight.color * dirLight.intensity);
     shader.setUniform3f("cameraPosition", camMatrices.getCamera().position);
-    shader.setUniform3f("lightDir", light.direction);
-    shader.setUniform3f("lightColor", light.color * light.intensity);
+    shader.setUniform3f("lightDir", dirLight.direction);
+    shader.setUniform3f("lightColor", dirLight.color * dirLight.intensity);
     shader.setUniform3f("ambientColor", ambientLight);
     shader.setUniformMatrix4f("mvp",
         camMatrices.getProj() * camMatrices.getView() * modelMatrix);
@@ -226,17 +235,31 @@ void ofAppTerrain::drawScene(CameraMatrices& camMatrices, int reflection)
     dirLight.color = vec3(1, 1, 0.5);  // white light
     dirLight.intensity = 1;
 
+    bigStaffPosition = vec3(10281.8 + 4 * sin(time), 752.475, 8699.67);
+
+
+    // Define the spot light
+    SpotLight spotLight{ };
+    spotLight.position = vec3(10281.8 + 15, 755.475, 8699.67);
+    spotLight.direction = vec3(-1, -1, 0);
+    spotLight.cutoff = cos(radians(45.0f /* degrees */));
+    spotLight.color = vec3(0.1, 0.1, 0.9);  // blue light
+    spotLight.intensity = 50;
+    spotLightIntensity = spotLight.intensity;
+    spotLightPos = spotLight.position;
+    spotLightDir = spotLight.direction;
+
     lightShader.begin();
 
     // Set up the textures in advance
     lightShader.setUniform1f("hasTexture", 0);
 
     if (isStaffDrawn)
-    drawMesh(camMatrices, dirLight, vec3(0.1),
+    drawMesh(camMatrices, spotLight, dirLight, vec3(0.1),
         lightShader, bigStaffMesh,
         translate(vec3(bigStaffPosition)));
     if (isJarDrawn)
-    drawMesh(camMatrices, dirLight, vec3(0.1),
+    drawMesh(camMatrices, spotLight, dirLight, vec3(0.1),
         lightShader, bigJarMesh,
         translate(vec3(bigJarPosition)));
 
@@ -308,13 +331,22 @@ void ofAppTerrain::draw()
     mat4 dirShadowView = lookAt(vec3(1, 1, -1) + fpCamera.position, fpCamera.position, vec3(0, 1, 0));
     mat4 dirShadowProj = ortho(-50.0f, 50.0f, -50.0f, 50.0f, -500.0f, 500.0f);
 
+    mat4 spotShadowView = (lookAt(spotLightPos, spotLightPos + spotLightDir, vec3(0, 1, 0)));
+    mat4 spotShadowProj = perspective((radians(90.0f)), aspect, nearPlane, midLODPlane);
+
     // FBO camera
     CameraMatrices dirFboCamMatrices{ dirShadowView, dirShadowProj };
+    CameraMatrices spotFboCamMatrices{ spotShadowView, spotShadowProj };
 
     fbo.begin();
     ofClear(0, 0, 0, 0);
     drawScene(dirFboCamMatrices, 0);
     fbo.end();
+
+    fbo2.begin();
+    ofClear(0, 0, 0, 0);
+    drawScene(spotFboCamMatrices, 0);
+    fbo2.end();
 
     drawScene(camNearMatrices, 0);
 
@@ -334,6 +366,10 @@ void ofAppTerrain::draw()
     shadowShader.setUniform1f("gammaInv", 1.0f / 2.2f);
     shadowShader.setUniform3f("meshColor", vec3(0.25, 0.5, 0.25));
 
+    shadowShader.setUniform3f("spotLightPos", spotLightPos);
+    shadowShader.setUniform3f("spotLightConeDir", spotLightDir);
+    shadowShader.setUniform1f("spotLightCutoff", cos(radians(45.0f)));
+    shadowShader.setUniform3f("spotLightColor", vec3(0.1, 0.1, 0.9) * spotLightIntensity);
 
     shadowShader.setUniform3f("dirLightDir", (vec3(1, 1, -1)));
     shadowShader.setUniform3f("dirLightColor", vec3(1, 1, 0.5));
@@ -344,8 +380,10 @@ void ofAppTerrain::draw()
     shadowShader.setUniformMatrix3f("normalMatrix", mat3());
     shadowShader.setUniformMatrix4f("shadowMatrix",
         dirFboCamMatrices.getProj() * dirFboCamMatrices.getView());
-
+    shadowShader.setUniformMatrix4f("shadowMatrix2",
+        spotFboCamMatrices.getProj()* spotFboCamMatrices.getView());
     shadowShader.setUniformTexture("fboTexture", fbo.getDepthTexture(), 0);
+    shadowShader.setUniformTexture("fboTexture2", fbo2.getDepthTexture(), 1);
 
     // Draw the high level-of-detail cells.
     cellManager.drawActiveCells(fpCamera.position, midLODPlane);
